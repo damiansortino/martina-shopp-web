@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 function ReporteCompras() {
   const [productos, setProductos] = useState([])
@@ -28,17 +28,12 @@ function ReporteCompras() {
       .reduce((acumulado, actual) => acumulado + actual.cantidad, 0)
   }
 
-  // Filtrado crítico: artículos con stock menor o igual a 3 unidades
   const productosCriticos = productos.filter(p => obtenerStockTotal(p.id) <= 3)
-
-  // Cálculo del capital estimado necesario para reponer al menos 1 unidad de cada faltante
   const inversionEstimada = productosCriticos.reduce((acum, p) => acum + p.precioCosto, 0)
 
-  // Función mágica que genera y descarga el PDF en el cliente
   const descargarPDF = () => {
     const doc = new jsPDF()
 
-    // Encabezado del documento
     doc.setFontSize(18)
     doc.text('MARTINA SHOPP - LISTA DE COMPRAS', 14, 20)
     
@@ -48,7 +43,6 @@ function ReporteCompras() {
     doc.text(`Productos en alerta crítica: ${productosCriticos.length}`, 14, 32)
     doc.text(`Inversión estimada base: $${inversionEstimada.toFixed(2)}`, 14, 38)
 
-    // Configuración de las columnas de la tabla
     const columnas = ['Ref', 'Producto', 'Rubro', 'Stock Act.', 'Costo Unit.']
     const filas = productosCriticos.map(p => [
       p.codigoNumerico,
@@ -58,8 +52,7 @@ function ReporteCompras() {
       `$${p.precioCosto.toFixed(2)}`
     ])
 
-    // Renderizado de la tabla con diseño limpio
-    doc.autoTable({
+    autoTable(doc, {
       startY: 44,
       head: [columnas],
       body: filas,
@@ -75,7 +68,6 @@ function ReporteCompras() {
       }
     })
 
-    // Descarga automática del archivo
     doc.save(`Lista_Compras_${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
@@ -93,7 +85,6 @@ function ReporteCompras() {
         )}
       </div>
 
-      {/* Tarjetas de Indicadores Rápidos (KPIs) */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
         <div style={{ flex: 1, backgroundColor: '#fff', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
           <span style={{ fontSize: '13px', color: '#718096', fontWeight: 'bold' }}>PRODUCTOS CRÍTICOS</span>
@@ -105,7 +96,6 @@ function ReporteCompras() {
         </div>
       </div>
 
-      {/* Tabla del Panel Visual */}
       {productosCriticos.length === 0 ? (
         <p style={{ textAlign: 'center', color: '#777', marginTop: '30px' }}>¡Impecable! No hay productos con bajo stock actualmente.</p>
       ) : (
