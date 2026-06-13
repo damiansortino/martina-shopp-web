@@ -132,7 +132,8 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
           precioCosto: parseFloat(costo) || 0,
           imagenUrl,
           categoriaId: categoriaId ? parseInt(categoriaId) : null,
-          rentabilidadEspecifica: margenManualDecimal
+          rentabilidadEspecifica: margenManualDecimal,
+          activo: esEdicion ? productoAEditar.activo : true
         })
       })
 

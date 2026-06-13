@@ -5,7 +5,8 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
   const [stocks, setStocks] = useState([])
   const [busqueda, setBusqueda] = useState('')
 
-  useEffect(() => {
+  // MODIFICADO: Separamos la carga en una función independiente para poder refrescar la lista tras eliminar
+  const cargarDatos = () => {
     Promise.all([
       fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos').then(res => res.json()),
       fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks').then(res => res.json())
@@ -15,7 +16,32 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
         setStocks(dataStocks)
       })
       .catch(err => console.error("Error al sincronizar datos:", err))
+  }
+
+  useEffect(() => {
+    cargarDatos()
   }, [])
+
+  // AGREGADO: Función para enviar el borrado lógico a Azure sin romper historiales
+  const handleEliminarProducto = async (e, id, nombre) => {
+    e.stopPropagation() // Evita que se abra el editor del producto al hacer clic en el botón
+    if (!confirm(`¿Seguro que querés dar de baja "${nombre}" del catálogo? No afectará al historial de ventas.`)) return
+
+    try {
+      const res = await fetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (res.ok) {
+        alert('Producto inactivado con éxito');
+        cargarDatos(); // Refresca el catálogo en vivo
+      } else {
+        alert('No se pudo inactivar el producto.');
+      }
+    } catch (err) {
+      console.error('Error al eliminar producto:', err)
+    }
+  }
 
   const obtenerStockTotal = (productoId) => {
     return stocks
@@ -61,6 +87,30 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
                 key={p.id} 
                 style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '8px', backgroundColor: '#fff', textAlign: 'center', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
               >
+                {/* AGREGADO: Botón flotante de eliminación lógica */}
+                <button
+                  onClick={(e) => handleEliminarProducto(e, p.id, p.nombre)}
+                  style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    background: '#fff',
+                    border: '1px solid #ddd',
+                    borderRadius: '50%',
+                    width: '26px',
+                    height: '26px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    zIndex: 10
+                  }}
+                  title="Dar de baja producto"
+                >
+                  🗑️
+                </button>
+
                 <div onClick={() => onEditarProducto(p)} style={{ cursor: 'pointer', flexGrow: 1 }}>
                   {p.imagenUrl ? (
                     <img src={p.imagenUrl} alt={p.nombre} style={{ width: '100%', height: '110px', objectFit: 'cover', borderRadius: '4px' }} />
@@ -69,7 +119,6 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
                   )}
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', padding: '0 2px' }}>
-                    {/* INCORPORADO: Muestra el código numérico del producto */}
                     <span style={{ fontSize: '10px', color: '#6c757d', fontWeight: 'bold' }}>
                       Ref: {p.codigoNumerico}
                     </span>
