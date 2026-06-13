@@ -9,10 +9,9 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
   const [variante, setVariante] = useState('General')
   const [cantidad, setCantidad] = useState('')
   
-  // Nuevos estados para el módulo de rentabilidad
   const [categorias, setCategorias] = useState([])
   const [categoriaId, setCategoriaId] = useState('')
-  const [rentabilidadManual, setRentabilidadManual] = useState('') // En porcentaje entero (ej: 45)
+  const [rentabilidadManual, setRentabilidadManual] = useState('') 
 
   const [stockId, setStockId] = useState(null)
   const esEdicion = !!productoAEditar
@@ -91,7 +90,30 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
     }
   }
 
-  // Lógica de simulación visual del Markup en vivo para el comerciante
+  const handleCambioImagen = async (e) => {
+    const archivo = e.target.files[0]
+    if (!archivo) return
+
+    const formData = new FormData()
+    formData.append('file', archivo)
+
+    try {
+      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/imagenes/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setImagenUrl(data.url)
+      } else {
+        alert('Error al subir la imagen a Azure.')
+      }
+    } catch (err) {
+      console.error('Error en la carga de imagen:', err)
+    }
+  }
+
   const calcularPrecioVentaSugerido = () => {
     const costoNum = parseFloat(costo) || 0
     if (costoNum <= 0) return 0
@@ -107,7 +129,7 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
       }
     }
 
-    return costoNum * 1.30 // Base global del 30% por defecto
+    return costoNum * 1.30 
   }
 
   const enviarFormulario = async (confirmarPisar = false) => {
@@ -120,7 +142,6 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
 
       const margenManualDecimal = rentabilidadManual ? parseFloat(rentabilidadManual) / 100 : null
 
-      // 1. Guardar o actualizar Producto incorporando los nuevos campos de margen
       const resProd = await fetch(url, {
         method: metodo,
         headers: { 'Content-Type': 'application/json' },
@@ -140,7 +161,6 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
       if (resProd.ok) {
         const pId = esEdicion ? productoAEditar.id : (await resProd.json()).id
 
-        // 2. Guardar o actualizar Stock
         if (esEdicion && stockId) {
           await fetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks/${stockId}`, {
             method: 'PUT',
@@ -209,14 +229,13 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
         <label style={labelStyle}>Rentabilidad Excepcional Manual (% - Opcional)</label>
         <input type="number" placeholder="Ej: 65 (Ignora el rubro anterior)" value={rentabilidadManual} onChange={e => setRentabilidadManual(e.target.value)} style={inputStyle} />
 
-        {/* Visor simulador en tiempo real */}
         <div style={{ backgroundColor: '#e2f0d9', padding: '12px', borderRadius: '6px', marginBottom: '15px', border: '1px solid #a9d08e' }}>
           <span style={{ fontSize: '14px', color: '#385723', fontWeight: 'bold' }}>💰 Precio sugerido de venta al público: </span>
           <span style={{ fontSize: '18px', color: '#385723', fontWeight: 'extrabold' }}>${calcularPrecioVentaSugerido().toFixed(2)}</span>
         </div>
 
-        <label style={labelStyle}>Enlace de la Imagen (URL de Google)</label>
-        <input type="text" placeholder="https://..." value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} style={inputStyle} />
+        <label style={labelStyle}>Foto del Producto (Cámara o Archivo)</label>
+        <input type="file" accept="image/*" capture="environment" onChange={handleCambioImagen} style={inputStyle} />
         
         <div style={previewContainerStyle}>
           {imagenUrl ? (
@@ -231,7 +250,7 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
             />
           ) : null}
           <div style={{ ...errorBadgeStyle, display: imagenUrl ? 'none' : 'block' }}>
-            📷 Esperando URL de imagen válida...
+            📷 Esperando captura o carga de imagen válida...
           </div>
         </div>
 
