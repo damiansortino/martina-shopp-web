@@ -4,7 +4,8 @@ import FormularioProducto from './components/FormularioProducto'
 import HistorialVentas from './components/HistorialVentas'
 import AdminCategorias from './components/AdminCategorias'
 import Sidebar from './components/Sidebar'
-import Login from './components/Login' // <-- IMPORTAMOS EL NUEVO COMPONENTE
+import Login from './components/Login'
+import GestionVentas from './components/GestionVentas'
 
 function App() {
   const [vistaActual, setVistaActual] = useState('catalogo')
@@ -129,6 +130,8 @@ function App() {
 
           <main style={{ maxWidth: '800px', margin: '0 auto', padding: '15px', boxSizing: 'border-box' }}>
             
+            {vistaActual === 'gestionVentas' && <GestionVentas />}
+
             {vistaActual === 'catalogo' && (
               <ListaProductos onEditarProducto={iniciarEdicion} onAgregarAlCarrito={agregarAlCarrito} />
             )}

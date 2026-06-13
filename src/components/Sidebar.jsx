@@ -22,6 +22,9 @@ function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion }) {
         <button onClick={() => { onSeleccionarVista('historial'); onClose(); }} style={btnMenuNomad}>
           <span style={{ marginRight: '10px' }}>📋</span>Historial Ventas
         </button>
+        <button onClick={() => { onSeleccionarVista('gestionVentas'); onClose(); }} style={btnMenuNomad} >
+          <span style={{ marginRight: '10px' }}>📊</span>Gestionar Ventas
+        </button>
         
         {/* Este botón ejecuta directamente el flujo de limpieza del App.jsx */}
         <button onClick={onCerrarSesion} style={{ ...btnMenuNomad, marginTop: 'auto', color: '#dc3545' }}>
