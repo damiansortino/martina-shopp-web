@@ -5,6 +5,8 @@ import autoTable from 'jspdf-autotable'
 function ReporteCompras() {
   const [productos, setProductos] = useState([])
   const [stocks, setStocks] = useState([])
+  // Estado para controlar las cantidades personalizadas a comprar por productoId
+  const [cantidadesAComprar, setCantidadesAComprar] = useState({})
 
   const cargarDatos = () => {
     Promise.all([
@@ -14,6 +16,18 @@ function ReporteCompras() {
       .then(([dataProductos, dataStocks]) => {
         setProductos(dataProductos)
         setStocks(dataStocks)
+        
+        // Inicializa por defecto cada producto crítico con cantidad 1
+        const iniciales = {}
+        dataProductos.forEach(p => {
+          const totalStock = dataStocks
+            .filter(s => s.productoId === p.id)
+            .reduce((acum, actual) => acum + actual.cantidad, 0)
+          if (totalStock <= 3) {
+            iniciales[p.id] = 1
+          }
+        })
+        setCantidadesAComprar(iniciales)
       })
       .catch(err => console.error("Error al cargar datos de reporte:", err))
   }
@@ -28,8 +42,21 @@ function ReporteCompras() {
       .reduce((acumulado, actual) => acumulado + actual.cantidad, 0)
   }
 
+  const handleCambiarCantidad = (productoId, valor) => {
+    const cantValida = Math.max(0, parseInt(valor) || 0)
+    setCantidadesAComprar(prev => ({
+      ...prev,
+      [productoId]: cantValida
+    }))
+  }
+
   const productosCriticos = productos.filter(p => obtenerStockTotal(p.id) <= 3)
-  const inversionEstimada = productosCriticos.reduce((acum, p) => acum + p.precioCosto, 0)
+  
+  // Cálculo de la inversión total en base a la cantidad seleccionada por el usuario
+  const inversionEstimada = productosCriticos.reduce((acum, p) => {
+    const cant = cantidadesAComprar[p.id] || 0
+    return acum + (p.precioCosto * cant)
+  }, 0)
 
   const descargarPDF = () => {
     const doc = new jsPDF()
@@ -41,16 +68,22 @@ function ReporteCompras() {
     doc.setTextColor(100)
     doc.text(`Fecha de emisión: ${new Date().toLocaleDateString()}`, 14, 26)
     doc.text(`Productos en alerta crítica: ${productosCriticos.length}`, 14, 32)
-    doc.text(`Inversión estimada base: $${inversionEstimada.toFixed(2)}`, 14, 38)
+    doc.text(`Inversión total proyectada: $${inversionEstimada.toFixed(2)}`, 14, 38)
 
-    const columnas = ['Ref', 'Producto', 'Rubro', 'Stock Act.', 'Costo Unit.']
-    const filas = productosCriticos.map(p => [
-      p.codigoNumerico,
-      p.nombre,
-      p.nombreCategoria || 'General',
-      `${obtenerStockTotal(p.id)} u.`,
-      `$${p.precioCosto.toFixed(2)}`
-    ])
+    // Agregamos columnas de Cantidad a comprar y subtotal al reporte físico del PDF
+    const columnas = ['Ref', 'Producto', 'Rubro', 'Stock Act.', 'Costo U.', 'Cant. Pedir', 'Subtotal']
+    const filas = productosCriticos.map(p => {
+      const cant = cantidadesAComprar[p.id] || 0
+      return [
+        p.codigoNumerico,
+        p.nombre,
+        p.nombreCategoria || 'General',
+        `${obtenerStockTotal(p.id)} u.`,
+        `$${p.precioCosto.toFixed(2)}`,
+        `${cant} u.`,
+        `$${(p.precioCosto * cant).toFixed(2)}`
+      ]
+    })
 
     autoTable(doc, {
       startY: 44,
@@ -60,11 +93,13 @@ function ReporteCompras() {
       headStyles: { fillColor: [44, 62, 80], fontSize: 10, fontStyle: 'bold' },
       styles: { fontSize: 9, cellPadding: 4 },
       columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 75 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 25, halign: 'center' },
-        4: { cellWidth: 30, halign: 'right' }
+        0: { cellWidth: 15 },
+        1: { cellWidth: 55 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 20, halign: 'center' },
+        4: { cellWidth: 23, halign: 'right' },
+        5: { cellWidth: 22, halign: 'center' },
+        6: { cellWidth: 25, halign: 'right' }
       }
     })
 
@@ -91,8 +126,8 @@ function ReporteCompras() {
           <h2 style={{ margin: '5px 0 0 0', color: '#e53e3e' }}>{productosCriticos.length}</h2>
         </div>
         <div style={{ flex: 1, backgroundColor: '#fff', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <span style={{ fontSize: '13px', color: '#718096', fontWeight: 'bold' }}>INVERSIÓN ESTIMADA DE REPOSICIÓN</span>
-          <h2 style={{ margin: '5px 0 0 0', color: '#2d3748' }}>${inversionEstimada.toFixed(2)}</h2>
+          <span style={{ fontSize: '13px', color: '#718096', fontWeight: 'bold' }}>INVERSIÓN TOTAL ESTIMADA</span>
+          <h2 style={{ margin: '5px 0 0 0', color: '#2b6cb0' }}>${inversionEstimada.toFixed(2)}</h2>
         </div>
       </div>
 
@@ -105,24 +140,54 @@ function ReporteCompras() {
               <th style={{ padding: '12px' }}>Ref</th>
               <th>Producto</th>
               <th>Categoría</th>
-              <th style={{ textAlign: 'center' }}>Stock Disponible</th>
-              <th style={{ textAlign: 'right', paddingRight: '12px' }}>Precio Costo</th>
+              <th style={{ textAlign: 'center' }}>Stock Act.</th>
+              <th style={{ textAlign: 'right' }}>Costo Unit.</th>
+              <th style={{ textAlign: 'center', width: '130px' }}>Cant. a Pedir</th>
+              <th style={{ textAlign: 'right', paddingRight: '12px' }}>Subtotal</th>
             </tr>
           </thead>
           <tbody>
-            {productosCriticos.map(p => (
-              <tr key={p.id} style={{ borderBottom: '1px solid #edf2f7' }}>
-                <td style={{ padding: '12px', fontWeight: 'bold' }}>{p.codigoNumerico}</td>
-                <td style={{ fontWeight: '500' }}>{p.nombre}</td>
-                <td><span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#4a5568', fontWeight: '600' }}>{p.nombreCategoria || 'General'}</span></td>
-                <td style={{ textAlign: 'center' }}>
-                  <span style={{ color: '#e53e3e', fontWeight: 'bold', backgroundColor: '#fff5f5', padding: '4px 8px', borderRadius: '4px' }}>
-                    {obtenerStockTotal(p.id)} u.
-                  </span>
-                </td>
-                <td style={{ textAlign: 'right', paddingRight: '12px', fontWeight: '600' }}>${p.precioCosto.toFixed(2)}</td>
-              </tr>
-            ))}
+            {productosCriticos.map(p => {
+              const cantidad = cantidadesAComprar[p.id] || 0
+              return (
+                <tr key={p.id} style={{ borderBottom: '1px solid #edf2f7' }}>
+                  <td style={{ padding: '12px', fontWeight: 'bold' }}>{p.codigoNumerico}</td>
+                  <td style={{ fontWeight: '500' }}>{p.nombre}</td>
+                  <td><span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#4a5568', fontWeight: '600' }}>{p.nombreCategoria || 'General'}</span></td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span style={{ color: '#e53e3e', fontWeight: 'bold', backgroundColor: '#fff5f5', padding: '4px 8px', borderRadius: '4px' }}>
+                      {obtenerStockTotal(p.id)} u.
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right', fontWeight: '600' }}>${p.precioCosto.toFixed(2)}</td>
+                  
+                  {/* Columna Interactiva de Selección de Unidades Manual y Paso a Paso */}
+                  <td style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                      <button 
+                        onClick={() => handleCambiarCantidad(p.id, cantidad - 1)} 
+                        style={{ padding: '4px 8px', backgroundColor: '#e2e8f0', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >-</button>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={cantidad} 
+                        onChange={(e) => handleCambiarCantidad(p.id, e.target.value)} 
+                        style={{ width: '45px', padding: '5px', textAlign: 'center', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 'bold' }}
+                      />
+                      <button 
+                        onClick={() => handleCambiarCantidad(p.id, cantidad + 1)} 
+                        style={{ padding: '4px 8px', backgroundColor: '#e2e8f0', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >+</button>
+                    </div>
+                  </td>
+
+                  <td style={{ textAlign: 'right', paddingRight: '12px', fontWeight: 'bold', color: '#2d3748' }}>
+                    ${(p.precioCosto * cantidad).toFixed(2)}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       )}
