@@ -65,9 +65,7 @@ function GestionVentas() {
             </span>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              {/* MODIFICADO: Color explícito para la etiqueta */}
               <label style={{ fontSize: '13px', color: '#4a5568', fontWeight: 'bold' }}>Cant:</label>
-              {/* MODIFICADO: Color de texto y fondo explícitos para evitar fallas de contraste */}
               <input 
                 type="number" 
                 min="1"
@@ -130,9 +128,17 @@ function GestionVentas() {
                 <td style={{ padding: '12px', fontWeight: 'bold', color: '#2d3748' }}>#{v.id}</td>
                 <td style={{ color: '#2d3748' }}>{new Date(v.fecha).toLocaleDateString()}</td>
                 
-                {/* MODIFICADO: Color de texto endurecido a #2d3748 para evitar herencias invisibles */}
-                <td style={{ fontWeight: '600', color: '#2d3748' }}>
-                  {v.vendedor?.nombre || <span style={{ color: '#a0aec0', fontSize: '13px', fontStyle: 'italic' }}>Directa</span>}
+                {/* MODIFICADO: Estructura interna reforzada para evitar herencias invisibles de color */}
+                <td style={{ padding: '12px' }}>
+                  {v.vendedor?.nombre ? (
+                    <strong style={{ color: '#1e293b', fontSize: '14px', display: 'block' }}>
+                      {v.vendedor.nombre}
+                    </strong>
+                  ) : (
+                    <span style={{ color: '#4a5568', fontSize: '13px', fontStyle: 'italic', backgroundColor: '#f1f5f9', padding: '3px 6px', borderRadius: '4px', fontWeight: '500' }}>
+                      Directa
+                    </span>
+                  )}
                 </td>
                 
                 <td style={{ fontWeight: '600', color: '#2d3748' }}>${v.total?.toFixed(2)}</td>
