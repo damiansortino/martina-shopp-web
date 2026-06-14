@@ -2,16 +2,93 @@ import { useState, useEffect } from 'react'
 
 function HistorialVentas() {
   const [ventas, setVentas] = useState([])
+  const [topProductos, setTopProductos] = useState([])
 
   useEffect(() => {
     fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/ventas')
       .then(res => res.json())
-      .then(data => setVentas(data))
+      .then(data => {
+        setVentas(data)
+        
+        // Calcular el Top 3 de productos más vendidos
+        const conteoProductos = {}
+
+        data.forEach(v => {
+          // Descartamos las ventas anuladas para no ensuciar el reporte de métricas reales
+          if (v.estado === 'Anulada') return
+
+          v.detalles.forEach(d => {
+            const pId = d.productoId
+            const nombreProd = d.producto?.nombre || `Prod ID: ${pId}`
+            const cantidad = d.cantidad || 0
+
+            if (conteoProductos[pId]) {
+              conteoProductos[pId].cantidadTotal += cantidad
+            } else {
+              conteoProductos[pId] = {
+                nombre: nombreProd,
+                cantidadTotal: cantidad
+              }
+            }
+          })
+        })
+
+        // Convertir el objeto a un arreglo, ordenar de mayor a menor y tomar los primeros 3
+        const ranking = Object.values(conteoProductos)
+          .sort((a, b) => b.cantidadTotal - a.cantidadTotal)
+          .slice(0, 3)
+
+        setTopProductos(ranking)
+      })
       .catch(err => console.error("Error al traer ventas:", err))
   }, [])
 
   return (
     <div style={{ marginTop: '10px' }}>
+      
+      {/* SECCIÓN SUPERIOR: Top 3 Productos Más Vendidos */}
+      {topProductos.length > 0 && (
+        <div style={{ marginBottom: '25px', backgroundColor: '#fff', padding: '15px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+          <h4 style={{ margin: '0 0 12px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🔥 Top 3 Productos Más Vendidos
+          </h4>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {topProductos.map((prod, index) => {
+              const medallas = ['👑 1°', '🥈 2°', '🥉 3°']
+              const fondos = ['#f0fff4', '#f8fafc', '#fffaf0']
+              const bordes = ['#38a169', '#94a3b8', '#dd6b20']
+              
+              return (
+                <div 
+                  key={index} 
+                  style={{ 
+                    flex: 1, 
+                    minWidth: '150px', 
+                    backgroundColor: fondos[index], 
+                    border: `1px solid ${bordes[index]}`, 
+                    padding: '10px', 
+                    borderRadius: '6px' 
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#4a5568', marginBottom: '2px' }}>
+                    {medallas[index]}
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a202c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={prod.nombre}>
+                    {prod.nombre}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#4a5568', marginTop: '2px' }}>
+                    Cant: <strong>{prod.cantidadTotal} u.</strong>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <hr style={{ border: '0', height: '1px', background: '#cbd5e1', margin: '20px 0' }} />
+
+      {/* SECCIÓN INFERIOR: Estructura Histórica Original intacta */}
       <h3>Historial de Ventas</h3>
       {ventas.length === 0 ? (
         <p style={{ textAlign: 'center', color: '#777' }}>No hay ventas registradas todavía.</p>
