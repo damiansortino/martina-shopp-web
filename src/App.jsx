@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar'
 import Login from './components/Login'
 import GestionVentas from './components/GestionVentas'
 import ReporteCompras from './components/ReporteCompras'
+import GestionVendedores from './components/GestionVendedores'
 
 function App() {
   const [vistaActual, setVistaActual] = useState('catalogo')
@@ -14,19 +15,32 @@ function App() {
   const [carrito, setCarrito] = useState([])
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
-  // Inicializa el estado leyendo directamente desde el almacenamiento local
+  // Estados para el módulo de vendedores en el carrito
+  const [listaVendedores, setListaVendedores] = useState([])
+  const [vendedorSeleccionadoId, setVendedorSeleccionadoId] = useState('')
+  
   const [sesionIniciada, setSesionIniciada] = useState(() => {
     return localStorage.getItem('martina_sesion_activa') === 'true'
   })
 
-  // Función encargada de guardar el estado del login de forma persistente
+  // Carga los vendedores activos al inicializar o cambiar al carrito
+  useEffect(() => {
+    if (sesionIniciada) {
+      fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/vendedores')
+        .then(res => res.json())
+        .then(data => {
+          setListaVendedores(data.filter(v => v.activo))
+        })
+        .catch(err => console.error("Error al traer vendedores:", err))
+    }
+  }, [sesionIniciada, vistaActual])
+
   const iniciarSesion = (token) => {
     localStorage.setItem('martina_sesion_activa', 'true')
-    localStorage.setItem('martina_user_token', token) // Dejamos guardado el token para futuros módulos
+    localStorage.setItem('martina_user_token', token) 
     setSesionIniciada(true)
   }
 
-  // Función encargada de purgar todo al salir
   const cerrarSesion = () => {
     localStorage.removeItem('martina_sesion_activa')
     localStorage.removeItem('martina_user_token')
@@ -77,6 +91,7 @@ function App() {
           id: 0,
           fecha: new Date().toISOString(),
           total: 0,
+          vendedorId: vendedorSeleccionadoId ? parseInt(vendedorSeleccionadoId) : null,
           detalles: detallesMapeados
         })
       })
@@ -84,6 +99,7 @@ function App() {
       if (res.ok) {
         alert('¡Venta registrada con éxito en caja!')
         setCarrito([])
+        setVendedorSeleccionadoId('')
         setVistaActual('catalogo')
       } else {
         alert('Error al procesar la venta.')
@@ -107,7 +123,6 @@ function App() {
     <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f8f9fa', minHeight: '100vh', paddingBottom: '30px' }}>
       
       {!sesionIniciada ? (
-        // Renderizado de la pantalla bonita de Login si no hay datos en localStorage
         <Login onLoginExitoso={iniciarSesion} />
       ) : (
         <>
@@ -126,14 +141,16 @@ function App() {
             isOpen={isSidebarOpen} 
             onClose={() => setIsSidebarOpen(false)} 
             onSeleccionarVista={(vista) => { setVistaActual(vista); setProductoAEditar(null); }}
-            onCerrarSesion={cerrarSesion} // <-- Vinculado al limpiador del localStorage
+            onCerrarSesion={cerrarSesion} 
           />
 
           <main style={{ maxWidth: '800px', margin: '0 auto', padding: '15px', boxSizing: 'border-box' }}>
-            
+
             {vistaActual === 'reporteCompras' && <ReporteCompras />}
-            
+
             {vistaActual === 'gestionVentas' && <GestionVentas />}
+            
+            {vistaActual === 'vendedores' && <GestionVendedores />}
 
             {vistaActual === 'catalogo' && (
               <ListaProductos onEditarProducto={iniciarEdicion} onAgregarAlCarrito={agregarAlCarrito} />
@@ -208,6 +225,21 @@ function App() {
                         <button onClick={() => eliminarDelCarrito(item.id)} style={{ background: 'none', border: 'none', color: '#dc3545', fontSize: '18px', cursor: 'pointer', marginLeft: '15px' }}>✕</button>
                       </div>
                     ))}
+
+                    {/* Selector de Vendedores para el mostrador */}
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f1f5f9', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', fontSize: '14px', color: '#334155' }}>👤 ¿Quién realizó esta venta?</label>
+                      <select 
+                        value={vendedorSeleccionadoId} 
+                        onChange={e => setVendedorSeleccionadoId(e.target.value)} 
+                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '15px', backgroundColor: '#fff' }}
+                      >
+                        <option value="">Ninguno / Venta Directa del Local</option>
+                        {listaVendedores.map(v => (
+                          <option key={v.id} value={v.id}>{v.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
 
                     <div style={{ marginTop: '25px', paddingTop: '15px', borderTop: '2px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <h4 style={{ margin: 0 }}>Total Neto a Cobrar:</h4>

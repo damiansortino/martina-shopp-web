@@ -7,7 +7,11 @@ function GestionVentas() {
   const cargarVentas = () => {
     fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas')
       .then(res => res.json())
-      .then(data => setVentas(data))
+      .then(data => {
+        // Ordena las ventas para mostrar las más recientes arriba
+        const ordenadas = data.sort((a, b) => b.id - a.id)
+        setVentas(ordenadas)
+      })
       .catch(err => console.error("Error al traer ventas:", err))
   }
 
@@ -56,7 +60,7 @@ function GestionVentas() {
         <h3 style={{ margin: '0 0 20px 0' }}>✏️ Modificar Cantidades - Venta #{ventaEditando.id}</h3>
         
         {ventaEditando.detalles.map((item, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: '15px', marginBottom: '12px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px idotted #eee' }}>
+          <div key={idx} style={{ display: 'flex', gap: '15px', marginBottom: '12px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px dotted #eee' }}>
             <span style={{ flex: 2, fontWeight: '500' }}>
               {item.producto?.nombre || `Producto ID: ${item.productoId}`}
             </span>
@@ -113,6 +117,7 @@ function GestionVentas() {
             <tr style={{ backgroundColor: '#f7fafc', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
               <th style={{ padding: '12px' }}>ID</th>
               <th>Fecha</th>
+              <th>Vendedor</th>
               <th>Total</th>
               <th>Estado</th>
               <th style={{ textAlign: 'center' }}>Acciones</th>
@@ -123,6 +128,10 @@ function GestionVentas() {
               <tr key={v.id} style={{ borderBottom: '1px solid #edf2f7' }}>
                 <td style={{ padding: '12px', fontWeight: 'bold' }}>#{v.id}</td>
                 <td>{new Date(v.fecha).toLocaleDateString()}</td>
+                {/* Muestra el nombre asignado o Venta Directa si es nulo */}
+                <td style={{ fontWeight: '500', color: '#4a5568' }}>
+                  {v.vendedor?.nombre || <span style={{ color: '#a0aec0', fontSize: '13px', fontStyle: 'italic' }}>Directa</span>}
+                </td>
                 <td style={{ fontWeight: '600', color: '#2d3748' }}>${v.total?.toFixed(2)}</td>
                 <td>
                   <span style={{ 
