@@ -26,10 +26,13 @@ function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion }) {
           <span style={{ marginRight: '10px' }}>📊</span>Gestionar Ventas
         </button>
         <button onClick={() => { onSeleccionarVista('vendedores'); onClose(); }} style={btnMenuNomad} >
-          <span style={{ marginRight: '10px' }}>👤</span>Gestionar Vendedores
+          <span style={{ marginRight: '10px' }}>👤</span>Vendedores
         </button>
         <button onClick={() => { onSeleccionarVista('reporteCompras'); onClose(); }} style={btnMenuNomad}>
           <span style={{ marginRight: '10px' }}>📋</span>Lista de Compras
+        </button>
+        <button onClick={() => { onSeleccionarVista('reporteVendedores'); onClose(); }} style={btnMenuNomad}>
+          <span style={{ marginRight: '10px' }}>📊</span>Ranking Vendedores
         </button>
 
         <button onClick={onCerrarSesion} style={{ ...btnMenuNomad, marginTop: 'auto', color: '#dc3545' }}>
