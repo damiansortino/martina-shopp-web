@@ -5,7 +5,6 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
   const [stocks, setStocks] = useState([])
   const [busqueda, setBusqueda] = useState('')
 
-  // MODIFICADO: Separamos la carga en una función independiente para poder refrescar la lista tras eliminar
   const cargarDatos = () => {
     Promise.all([
       fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos').then(res => res.json()),
@@ -22,9 +21,8 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
     cargarDatos()
   }, [])
 
-  // AGREGADO: Función para enviar el borrado lógico a Azure sin romper historiales
   const handleEliminarProducto = async (e, id, nombre) => {
-    e.stopPropagation() // Evita que se abra el editor del producto al hacer clic en el botón
+    e.stopPropagation() 
     if (!confirm(`¿Seguro que querés dar de baja "${nombre}" del catálogo? No afectará al historial de ventas.`)) return
 
     try {
@@ -34,7 +32,7 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
 
       if (res.ok) {
         alert('Producto inactivado con éxito');
-        cargarDatos(); // Refresca el catálogo en vivo
+        cargarDatos(); 
       } else {
         alert('No se pudo inactivar el producto.');
       }
@@ -87,7 +85,6 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
                 key={p.id} 
                 style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '8px', backgroundColor: '#fff', textAlign: 'center', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
               >
-                {/* AGREGADO: Botón flotante de eliminación lógica */}
                 <button
                   onClick={(e) => handleEliminarProducto(e, p.id, p.nombre)}
                   style={{
@@ -165,6 +162,16 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
   )
 }
 
-const inputBuscarStyle = { width: '100%', padding: '12px', boxSizing: 'border-box', borderRadius: '8px', border: '1px solid #ccc', fontSize: '16px', backgroundColor: '#fff' }
+// MODIFICADO: Agregada propiedad color e indicador de placeholder explícito
+const inputBuscarStyle = { 
+  width: '100%', 
+  padding: '12px', 
+  boxSizing: 'border-box', 
+  borderRadius: '8px', 
+  border: '1px solid #ccc', 
+  fontSize: '16px', 
+  backgroundColor: '#fff',
+  color: '#333333'
+}
 
 export default ListaProductos

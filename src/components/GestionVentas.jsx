@@ -8,7 +8,6 @@ function GestionVentas() {
     fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas')
       .then(res => res.json())
       .then(data => {
-        // Ordena las ventas para mostrar las más recientes arriba
         const ordenadas = data.sort((a, b) => b.id - a.id)
         setVentas(ordenadas)
       })
@@ -43,7 +42,7 @@ function GestionVentas() {
         body: JSON.stringify(ventaEditando)
       })
       if (res.ok) {
-        alert('Venta modificada y stock recalculado.');
+        alert('Venta modified y stock recalculado.');
         setVentaEditando(null);
         cargarVentas();
       } else {
@@ -57,16 +56,18 @@ function GestionVentas() {
   if (ventaEditando) {
     return (
       <div style={{ background: '#fff', padding: '25px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-        <h3 style={{ margin: '0 0 20px 0' }}>✏️ Modificar Cantidades - Venta #{ventaEditando.id}</h3>
+        <h3 style={{ margin: '0 0 20px 0', color: '#2d3748' }}>✏️ Modificar Cantidades - Venta #{ventaEditando.id}</h3>
         
         {ventaEditando.detalles.map((item, idx) => (
           <div key={idx} style={{ display: 'flex', gap: '15px', marginBottom: '12px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px dotted #eee' }}>
-            <span style={{ flex: 2, fontWeight: '500' }}>
+            <span style={{ flex: 2, fontWeight: '500', color: '#2d3748' }}>
               {item.producto?.nombre || `Producto ID: ${item.productoId}`}
             </span>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <label style={{ fontSize: '13px', color: '#666' }}>Cant:</label>
+              {/* MODIFICADO: Color explícito para la etiqueta */}
+              <label style={{ fontSize: '13px', color: '#4a5568', fontWeight: 'bold' }}>Cant:</label>
+              {/* MODIFICADO: Color de texto y fondo explícitos para evitar fallas de contraste */}
               <input 
                 type="number" 
                 min="1"
@@ -77,7 +78,7 @@ function GestionVentas() {
                   nuevosDets[idx].cantidad = nuevaCant;
                   setVentaEditando({ ...ventaEditando, detalles: nuevosDets });
                 }}
-                style={{ width: '65px', padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+                style={{ width: '65px', padding: '6px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff', color: '#333333', fontWeight: 'bold' }}
               />
             </div>
 
@@ -110,28 +111,30 @@ function GestionVentas() {
 
   return (
     <div>
-      <h3 style={{ marginBottom: '15px' }}>Historial y Gestión de Ventas ({ventas.length})</h3>
+      <h3 style={{ marginBottom: '15px', color: '#2d3748' }}>Historial y Gestión de Ventas ({ventas.length})</h3>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
           <thead>
             <tr style={{ backgroundColor: '#f7fafc', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
-              <th style={{ padding: '12px' }}>ID</th>
-              <th>Fecha</th>
-              <th>Vendedor</th>
-              <th>Total</th>
-              <th>Estado</th>
-              <th style={{ textAlign: 'center' }}>Acciones</th>
+              <th style={{ padding: '12px', color: '#4a5568' }}>ID</th>
+              <th style={{ color: '#4a5568' }}>Fecha</th>
+              <th style={{ color: '#4a5568' }}>Vendedor</th>
+              <th style={{ color: '#4a5568' }}>Total</th>
+              <th style={{ color: '#4a5568' }}>Estado</th>
+              <th style={{ textAlign: 'center', color: '#4a5568' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {ventas.map(v => (
               <tr key={v.id} style={{ borderBottom: '1px solid #edf2f7' }}>
-                <td style={{ padding: '12px', fontWeight: 'bold' }}>#{v.id}</td>
-                <td>{new Date(v.fecha).toLocaleDateString()}</td>
-                {/* Muestra el nombre asignado o Venta Directa si es nulo */}
-                <td style={{ fontWeight: '500', color: '#4a5568' }}>
+                <td style={{ padding: '12px', fontWeight: 'bold', color: '#2d3748' }}>#{v.id}</td>
+                <td style={{ color: '#2d3748' }}>{new Date(v.fecha).toLocaleDateString()}</td>
+                
+                {/* MODIFICADO: Color de texto endurecido a #2d3748 para evitar herencias invisibles */}
+                <td style={{ fontWeight: '600', color: '#2d3748' }}>
                   {v.vendedor?.nombre || <span style={{ color: '#a0aec0', fontSize: '13px', fontStyle: 'italic' }}>Directa</span>}
                 </td>
+                
                 <td style={{ fontWeight: '600', color: '#2d3748' }}>${v.total?.toFixed(2)}</td>
                 <td>
                   <span style={{ 
