@@ -38,6 +38,9 @@ function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion }) {
           <button onClick={() => { onSeleccionarVista('vendedores'); onClose(); }} style={btnMenuNomad} >
             <span style={{ marginRight: '10px' }}>👤</span>Vendedores
           </button>
+          <button onClick={() => { onSeleccionarVista('mediosPago'); onClose(); }} style={btnMenuNomad} >
+            <span style={{ marginRight: '10px' }}>⚙️</span>Configurar Pagos
+          </button>
           <button onClick={() => { onSeleccionarVista('reporteCompras'); onClose(); }} style={btnMenuNomad}>
             <span style={{ marginRight: '10px' }}>📋</span>Lista de Compras
           </button>
