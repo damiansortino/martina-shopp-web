@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 function GestionVentas() {
   const [ventas, setVentas] = useState([])
   const [ventaEditando, setVentaEditando] = useState(null)
+  const [mediosPago, setMediosPago] = useState([])
 
   const cargarVentas = () => {
     fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas')
@@ -14,7 +15,17 @@ function GestionVentas() {
       .catch(err => console.error("Error al traer ventas:", err))
   }
 
-  useEffect(() => { cargarVentas() }, [])
+  const cargarMediosPago = () => {
+    fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago')
+      .then(res => res.json())
+      .then(data => setMediosPago(data))
+      .catch(err => console.error("Error al traer medios de pago:", err))
+  }
+
+  useEffect(() => { 
+    cargarVentas() 
+    cargarMediosPago()
+  }, [])
 
   const handleAnular = async (id) => {
     if (!confirm('¿Seguro que querés ANULAR esta venta? El stock se devolverá automáticamente.')) return
@@ -42,7 +53,7 @@ function GestionVentas() {
         body: JSON.stringify(ventaEditando)
       })
       if (res.ok) {
-        alert('Venta modified y stock recalculado.');
+        alert('Venta modificada y stock recalculado.');
         setVentaEditando(null);
         cargarVentas();
       } else {
@@ -58,6 +69,20 @@ function GestionVentas() {
       <div style={{ background: '#fff', padding: '25px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
         <h3 style={{ margin: '0 0 20px 0', color: '#2d3748' }}>✏️ Modificar Cantidades - Venta #{ventaEditando.id}</h3>
         
+        {/* Selector del Medio de Pago en la Edición */}
+        <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+          <label style={{ display: 'block', fontSize: '13px', color: '#4a5568', fontWeight: 'bold', marginBottom: '6px' }}>Medio de Pago:</label>
+          <select
+            value={ventaEditando.medioPagoId || ''}
+            onChange={e => setVentaEditando({ ...ventaEditando, medioPagoId: parseInt(e.target.value) })}
+            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff', color: '#333333', width: '100%', fontSize: '14px', fontWeight: '500' }}
+          >
+            {mediosPago.map(m => (
+              <option key={m.id} value={m.id}>{m.nombre}</option>
+            ))}
+          </select>
+        </div>
+
         {ventaEditando.detalles.map((item, idx) => (
           <div key={idx} style={{ display: 'flex', gap: '15px', marginBottom: '12px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px dotted #eee' }}>
             <span style={{ flex: 2, fontWeight: '500', color: '#2d3748' }}>
@@ -117,6 +142,7 @@ function GestionVentas() {
               <th style={{ padding: '12px', color: '#4a5568' }}>ID</th>
               <th style={{ color: '#4a5568' }}>Fecha</th>
               <th style={{ color: '#4a5568' }}>Vendedor</th>
+              <th style={{ color: '#4a5568' }}>Medio Pago</th>
               <th style={{ color: '#4a5568' }}>Total</th>
               <th style={{ color: '#4a5568' }}>Estado</th>
               <th style={{ textAlign: 'center', color: '#4a5568' }}>Acciones</th>
@@ -128,7 +154,6 @@ function GestionVentas() {
                 <td style={{ padding: '12px', fontWeight: 'bold', color: '#2d3748' }}>#{v.id}</td>
                 <td style={{ color: '#2d3748' }}>{new Date(v.fecha).toLocaleDateString()}</td>
                 
-                {/* MODIFICADO: Estructura interna reforzada para evitar herencias invisibles de color */}
                 <td style={{ padding: '12px' }}>
                   {v.vendedor?.nombre ? (
                     <strong style={{ color: '#1e293b', fontSize: '14px', display: 'block' }}>
@@ -139,6 +164,21 @@ function GestionVentas() {
                       Directa
                     </span>
                   )}
+                </td>
+
+                {/* NUEVA COLUMNA: Visualización fija de los Medios de Pago */}
+                <td style={{ padding: '12px' }}>
+                  <span style={{ 
+                    color: '#1e293b', 
+                    fontSize: '13px', 
+                    fontWeight: 'bold', 
+                    backgroundColor: '#e2e8f0', 
+                    padding: '4px 8px', 
+                    borderRadius: '4px',
+                    display: 'inline-block'
+                  }}>
+                    {v.medioPago?.nombre || 'Efectivo'}
+                  </span>
                 </td>
                 
                 <td style={{ fontWeight: '600', color: '#2d3748' }}>${v.total?.toFixed(2)}</td>

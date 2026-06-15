@@ -14,7 +14,6 @@ function HistorialVentas() {
         const conteoProductos = {}
 
         data.forEach(v => {
-          // Descartamos las ventas anuladas para no ensuciar el reporte de métricas reales
           if (v.estado === 'Anulada') return
 
           v.detalles.forEach(d => {
@@ -33,7 +32,6 @@ function HistorialVentas() {
           })
         })
 
-        // Convertir el objeto a un arreglo, ordenar de mayor a menor y tomar los primeros 3
         const ranking = Object.values(conteoProductos)
           .sort((a, b) => b.cantidadTotal - a.cantidadTotal)
           .slice(0, 3)
@@ -88,19 +86,37 @@ function HistorialVentas() {
 
       <hr style={{ border: '0', height: '1px', background: '#cbd5e1', margin: '20px 0' }} />
 
-      {/* SECCIÓN INFERIOR: Estructura Histórica Original intacta */}
-      <h3>Historial de Ventas</h3>
+      {/* SECCIÓN INFERIOR: Lista Histórica */}
+      <h3 style={{ color: '#2d3748' }}>Historial de Ventas</h3>
       {ventas.length === 0 ? (
         <p style={{ textAlign: 'center', color: '#777' }}>No hay ventas registradas todavía.</p>
       ) : (
         ventas.map(v => (
-          <div key={v.id} style={{ backgroundColor: '#fff', padding: '15px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #ddd', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontWeight: 'bold' }}>
-              <span style={{ color: '#555' }}>📅 {new Date(v.fecha).toLocaleDateString()}</span>
-              <span style={{ color: '#28a745', fontSize: '16px' }}>Total: ${v.total.toFixed(2)}</span>
+          <div key={v.id} style={{ backgroundColor: '#fff', padding: '15px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #ddd', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', opacity: v.estado === 'Anulada' ? 0.6 : 1 }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ color: '#333333', fontWeight: 'bold' }}>
+                📅 {new Date(v.fecha).toLocaleDateString()} {v.estado === 'Anulada' && <span style={{ color: '#dc3545', marginLeft: '5px' }}>(ANULADA)</span>}
+              </span>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {/* NUEVO: Visualización del Medio de Pago */}
+                <span style={{ 
+                  color: '#1e293b', 
+                  fontSize: '12px', 
+                  fontWeight: 'bold', 
+                  backgroundColor: '#edf2f7', 
+                  padding: '4px 8px', 
+                  borderRadius: '4px'
+                }}>
+                  💳 {v.medioPago?.nombre || 'Efectivo'}
+                </span>
+                <span style={{ color: '#28a745', fontSize: '16px', fontWeight: 'bold' }}>Total: ${v.total.toFixed(2)}</span>
+              </div>
             </div>
+
             {v.detalles.map(d => (
-              <div key={d.id} style={{ fontSize: '14px', color: '#666', padding: '4px 0', borderTop: '1px dashed #eee' }}>
+              <div key={d.id} style={{ fontSize: '14px', color: '#4a5568', padding: '6px 0', borderTop: '1px dashed #eee' }}>
                 • {d.producto?.nombre || `Prod ID: ${d.productoId}`} x {d.cantidad} u.
               </div>
             ))}

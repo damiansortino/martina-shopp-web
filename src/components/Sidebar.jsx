@@ -29,6 +29,12 @@ function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion }) {
           <button onClick={() => { onSeleccionarVista('gestionVentas'); onClose(); }} style={btnMenuNomad} >
             <span style={{ marginRight: '10px' }}>📊</span>Gestionar Ventas
           </button>
+
+          {/* AGREGADO: Botón de acceso al Arqueo y Control de Caja */}
+          <button onClick={() => { onSeleccionarVista('controlCaja'); onClose(); }} style={btnMenuNomad} >
+            <span style={{ marginRight: '10px' }}>🏪</span>Control de Caja
+          </button>
+
           <button onClick={() => { onSeleccionarVista('vendedores'); onClose(); }} style={btnMenuNomad} >
             <span style={{ marginRight: '10px' }}>👤</span>Vendedores
           </button>
@@ -56,7 +62,6 @@ const overlayStyle = { position: 'fixed', top: 0, left: 0, width: '100vw', heigh
 const sidebarStyle = { position: 'fixed', top: 0, left: 0, width: '250px', height: '100vh', backgroundColor: '#fff', boxShadow: '2px 0 5px rgba(0,0,0,0.2)', padding: '20px', zIndex: 999, display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }
 const btnMenuNomad = { width: '100%', padding: '12px', textAlign: 'left', marginBottom: '10px', background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', borderRadius: '4px', color: '#333333' }
 
-// Estilo para forzar la posición del botón abajo del todo de forma limpia
 const footerStyle = {
   position: 'absolute',
   bottom: 0,

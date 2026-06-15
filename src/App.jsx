@@ -9,6 +9,7 @@ import GestionVentas from './components/GestionVentas'
 import ReporteCompras from './components/ReporteCompras'
 import GestionVendedores from './components/GestionVendedores'
 import ReporteVendedores from './components/ReporteVendedores'
+import ControlCaja from './components/ControlCaja'
 
 function App() {
   const [vistaActual, setVistaActual] = useState('catalogo')
@@ -146,7 +147,8 @@ function App() {
           />
 
           <main style={{ maxWidth: '800px', margin: '0 auto', padding: '15px', boxSizing: 'border-box' }}>
-            
+            {vistaActual === 'ControlCaja' && <ControlCaja />}
+
             {vistaActual === 'reporteVendedores' && <ReporteVendedores />}
 
             {vistaActual === 'reporteCompras' && <ReporteCompras />}
