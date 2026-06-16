@@ -190,7 +190,11 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
         alert(esEdicion ? '¡Producto y stock actualizados!' : '¡Producto guardado con éxito!')
         if (onProductoCreado) onProductoCreado()
       } else if (resProd.status === 409) {
-        const confirmar = window.confirm('¡Código duplicado! ¿Deseas usarlo de todas formas?')
+        // MODIFICADO: Lee el json de error enviado por el Conflict() del backend
+        const errorData = await resProd.json()
+        const mensajePrompt = errorData.mensaje || 'El código ya existe'
+        
+        const confirmar = window.confirm(`${mensajePrompt}\n\n¿Deseas usarlo de todas formas?`)
         if (confirmar) enviarFormulario(true)
       } else {
         const errData = await resProd.statusText
@@ -207,7 +211,8 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
       <form onSubmit={(e) => { e.preventDefault(); enviarFormulario(false); }}>
         
         <label style={labelStyle}>Código de Producto</label>
-        <input type="number" value={codigo} onChange={e => setCodigo(e.target.value)} required style={inputStyle} disabled={esEdicion} />
+        {/* MODIFICADO: Se quitó el atributo disabled para permitir el cambio de código */}
+        <input type="number" value={codigo} onChange={e => setCodigo(e.target.value)} required style={inputStyle} />
         
         <label style={labelStyle}>Nombre del Producto</label>
         <input type="text" placeholder="Ej: Campera de Jean" value={nombre} onChange={e => setNombre(e.target.value)} required style={inputStyle} />
@@ -269,7 +274,7 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
         </button>
         
         <button type="button" onClick={onCancelar} style={{ ...btnStyle, backgroundColor: '#6c757d', marginTop: '8px' }}>
-          Cancelar
+          Cancel
         </button>
       </form>
     </div>
