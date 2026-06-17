@@ -46,7 +46,7 @@ function Login({ onLoginExitoso }) {
           rolUsuario = infoData.rol || 'vendedor'
         }
 
-        if (usuarioLimpio === 'master@martinashopp.com') {
+        if (usuarioLimpio === 'damiansortino@gmail.com') {
           rolUsuario = 'master'
         }
 
