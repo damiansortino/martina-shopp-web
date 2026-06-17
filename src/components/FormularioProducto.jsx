@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Validá que la ruta relativa sea la correcta en tu árbol de carpetas
 
 function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
   const [nombre, setNombre] = useState('')
@@ -15,6 +16,8 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
 
   const [stockId, setStockId] = useState(null)
   const esEdicion = !!productoAEditar
+
+  const BASE_URL = 'https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net'
 
   useEffect(() => {
     traerCategorias()
@@ -47,11 +50,9 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
 
   const traerCategorias = async () => {
     try {
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/categorias')
-      if (res.ok) {
-        const data = await res.json()
-        setCategorias(data)
-      }
+      // Al usar apiFetch, viaja el token y el backend filtra automáticamente las categorías de tu tienda
+      const data = await apiFetch(`${BASE_URL}/categorias`)
+      setCategorias(data)
     } catch (err) {
       console.error("Error al traer categorías:", err)
     }
@@ -59,11 +60,8 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
 
   const traerSiguienteCodigo = async () => {
     try {
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos/siguiente-codigo')
-      if (res.ok) {
-        const siguiente = await res.json()
-        setCodigo(siguiente.toString())
-      }
+      const siguiente = await apiFetch(`${BASE_URL}/productos/siguiente-codigo`)
+      setCodigo(siguiente.toString())
     } catch (err) {
       console.error('Error al sugerir código:', err)
     }
@@ -71,19 +69,16 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
 
   const traerStockDelProducto = async (productoId) => {
     try {
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks')
-      if (res.ok) {
-        const todosLosStocks = await res.json()
-        const stockAsociado = todosLosStocks.find(s => s.productoId === productoId)
-        
-        if (stockAsociado) {
-          setStockId(stockAsociado.id)
-          setVariante(stockAsociado.variante || 'General')
-          setCantidad(stockAsociado.cantidad.toString())
-        } else {
-          setStockId(null)
-          setCantidad('0')
-        }
+      const todosLosStocks = await apiFetch(`${BASE_URL}/stocks`)
+      const stockAsociado = todosLosStocks.find(s => s.productoId === productoId)
+      
+      if (stockAsociado) {
+        setStockId(stockAsociado.id)
+        setVariante(stockAsociado.variante || 'General')
+        setCantidad(stockAsociado.cantidad.toString())
+      } else {
+        setStockId(null)
+        setCantidad('0')
       }
     } catch (err) {
       console.error('Error al traer el stock:', err)
@@ -98,13 +93,13 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
     formData.append('file', archivo)
 
     try {
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/imagenes/upload', {
+      // Para subir archivos con FormData pasamos el body directo sin Content-Type manual
+      const data = await apiFetch(`${BASE_URL}/imagenes/upload`, {
         method: 'POST',
         body: formData
       })
 
-      if (res.ok) {
-        const data = await res.json()
+      if (data && data.url) {
         setImagenUrl(data.url)
       } else {
         alert('Error al subir la imagen a Azure.')
@@ -136,15 +131,14 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
     try {
       const metodo = esEdicion ? 'PUT' : 'POST'
       const urlBase = esEdicion 
-        ? `https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos/${productoAEditar.id}` 
-        : 'https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos'
+        ? `${BASE_URL}/productos/${productoAEditar.id}` 
+        : `${BASE_URL}/productos`
       const url = `${urlBase}?confirmarDuplicado=${confirmarPisar}`
 
       const margenManualDecimal = rentabilidadManual ? parseFloat(rentabilidadManual) / 100 : null
 
-      const resProd = await fetch(url, {
+      const resProd = await apiFetch(url, {
         method: metodo,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: esEdicion ? productoAEditar.id : 0,
           codigoNumerico: codigo.toString(),
@@ -158,13 +152,13 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
         })
       })
 
-      if (resProd.ok) {
-        const pId = esEdicion ? productoAEditar.id : (await resProd.json()).id
+      // apiFetch ya maneja las excepciones y nos devuelve la respuesta parseada
+      if (resProd) {
+        const pId = esEdicion ? productoAEditar.id : resProd.id
 
         if (esEdicion && stockId) {
-          await fetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks/${stockId}`, {
+          await apiFetch(`${BASE_URL}/stocks/${stockId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               id: stockId,
               productoId: pId,
@@ -174,13 +168,13 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
             })
           })
         } else {
-          await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks', {
+          await apiFetch(`${BASE_URL}/stocks`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               id: 0,
               productoId: pId,
               variante: variante,
+              amount: parseInt(cantidad) || 0, // mapeado según requiera tu backend (cantidad)
               cantidad: parseInt(cantidad) || 0,
               producto: null
             })
@@ -189,19 +183,16 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
 
         alert(esEdicion ? '¡Producto y stock actualizados!' : '¡Producto guardado con éxito!')
         if (onProductoCreado) onProductoCreado()
-      } else if (resProd.status === 409) {
-        // MODIFICADO: Lee el json de error enviado por el Conflict() del backend
-        const errorData = await resProd.json()
-        const mensajePrompt = errorData.mensaje || 'El código ya existe'
-        
-        const confirmar = window.confirm(`${mensajePrompt}\n\n¿Deseas usarlo de todas formas?`)
-        if (confirmar) enviarFormulario(true)
-      } else {
-        const errData = await resProd.statusText
-        console.error("Error validación producto:", errData)
       }
     } catch (err) {
-      console.error('Error al procesar el formulario:', err)
+      // Manejo específico si el interceptor arroja el conflicto 409 por código duplicado
+      if (err.message && err.message.includes('409')) {
+        const confirmar = window.confirm("El código de producto ya existe en esta tienda.\n\n¿Deseas usarlo de todas formas?")
+        if (confirmar) enviarFormulario(true)
+      } else {
+        console.error('Error al procesar el formulario:', err)
+        alert('Ocurrió un error al intentar guardar el producto.')
+      }
     }
   }
 
@@ -211,7 +202,6 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
       <form onSubmit={(e) => { e.preventDefault(); enviarFormulario(false); }}>
         
         <label style={labelStyle}>Código de Producto</label>
-        {/* MODIFICADO: Se quitó el atributo disabled para permitir el cambio de código */}
         <input type="number" value={codigo} onChange={e => setCodigo(e.target.value)} required style={inputStyle} />
         
         <label style={labelStyle}>Nombre del Producto</label>
@@ -274,7 +264,7 @@ function FormularioProducto({ onProductoCreado, productoAEditar, onCancelar }) {
         </button>
         
         <button type="button" onClick={onCancelar} style={{ ...btnStyle, backgroundColor: '#6c757d', marginTop: '8px' }}>
-          Cancel
+          Cancelar
         </button>
       </form>
     </div>
@@ -288,4 +278,4 @@ const previewContainerStyle = { width: '100%', height: '180px', backgroundColor:
 const imageStyle = { width: '100%', height: '100%', objectFit: 'cover' }
 const errorBadgeStyle = { color: '#6c757d', fontSize: '14px', textAlign: 'center', padding: '10px' }
 
-export default FormularioProducto
+export default FormularioProducto;
