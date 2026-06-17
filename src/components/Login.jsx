@@ -11,35 +11,42 @@ function Login({ onLoginExitoso }) {
     setError('')
     setCargando(true)
 
+    const usuarioLimpio = email.trim();
+
     try {
-      // 1. Petición de Login estándar a Identity
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/api/auth/login', {
+      // 1. Petición de Login al endpoint nativo de ASP.NET Core Identity
+      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          username: email, 
+          email: usuarioLimpio, // Identity nativo requiere "email"
           password: password 
         })
       })
 
       if (res.ok) {
         const data = await res.json()
-        const token = data.accessToken || data.token; // Soporta ambos formatos de token
+        const token = data.accessToken || data.token
 
-        // 2. Consulta rápida al perfil del usuario logueado para extraer su información extendida (Rol)
-        const infoRes = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/api/auth/manage/info', {
+        // 2. Consulta rápida al perfil del usuario para validar datos extras
+        const infoRes = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/manage/info', {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` }
         })
 
-        let rolUsuario = 'vendedor'; // Rol base por defecto
+        let rolUsuario = 'vendedor' // Por defecto
+        
         if (infoRes.ok) {
           const infoData = await infoRes.json()
-          // Identity mapea las propiedades custom dentro de un objeto o claims. Si no viene explícito, asumimos vendedor
-          rolUsuario = infoData.rol || 'vendedor';
+          rolUsuario = infoData.rol || 'vendedor'
         }
 
-        // Envía tanto el token como el rol al contenedor global para actualizar la UI y la Sidebar
+        // CONTROL DE ACCESO MAESTRO TEMPORAL FRONTEND:
+        // Si ingresa tu dirección, forzamos tu rol master para asegurar la visualización
+        if (usuarioLimpio.toLowerCase() === 'damian@correo.com') { // Reemplazá por tu correo exacto de la base si varía
+          rolUsuario = 'master'
+        }
+
         onLoginExitoso(token, rolUsuario) 
       } else {
         setError('Credenciales incorrectas. Verifique e intente nuevamente.')
