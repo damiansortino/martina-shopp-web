@@ -13,8 +13,8 @@ function Login({ onLoginExitoso }) {
 
     const usuarioLimpio = email.trim().toLowerCase();
 
-    // --- BYPASS DE SEGURIDAD LOCAL PARA DESTREBAR ENTRADA ---
-    if (usuarioLimpio === 'master@martinashopp.com' && password === 'Admin123!') {
+    // --- BYPASS DE SEGURIDAD LOCAL ---
+    if ((usuarioLimpio === 'damiansortino@gmail.com' || usuarioLimpio === 'master@martinashopp.com') && password === 'Damian12@') {
       setCargando(false)
       onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', 'master')
       return
@@ -23,7 +23,10 @@ function Login({ onLoginExitoso }) {
     try {
       const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'accept': 'application/json',
+          'Content-Type': 'application/json' 
+        },
         body: JSON.stringify({ 
           email: usuarioLimpio, 
           password: password 
@@ -34,19 +37,9 @@ function Login({ onLoginExitoso }) {
         const data = await res.json()
         const token = data.accessToken || data.token
 
-        const infoRes = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/manage/info', {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-
         let rolUsuario = 'vendedor' 
         
-        if (infoRes.ok) {
-          const infoData = await infoRes.json()
-          rolUsuario = infoData.rol || 'vendedor'
-        }
-
-        if (usuarioLimpio === 'damiansortino@gmail.com') {
+        if (usuarioLimpio === 'damiansortino@gmail.com' || usuarioLimpio === 'master@martinashopp.com') {
           rolUsuario = 'master'
         }
 
