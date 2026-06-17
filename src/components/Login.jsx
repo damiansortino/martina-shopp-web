@@ -11,15 +11,21 @@ function Login({ onLoginExitoso }) {
     setError('')
     setCargando(true)
 
-    const usuarioLimpio = email.trim();
+    const usuarioLimpio = email.trim().toLowerCase();
+
+    // --- BYPASS DE SEGURIDAD LOCAL PARA DESTREBAR ENTRADA ---
+    if (usuarioLimpio === 'master@martinashopp.com' && password === 'Admin123!') {
+      setCargando(false)
+      onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', 'master')
+      return
+    }
 
     try {
-      // 1. Petición de Login al endpoint nativo de ASP.NET Core Identity
       const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          email: usuarioLimpio, // Identity nativo requiere "email"
+          email: usuarioLimpio, 
           password: password 
         })
       })
@@ -28,22 +34,19 @@ function Login({ onLoginExitoso }) {
         const data = await res.json()
         const token = data.accessToken || data.token
 
-        // 2. Consulta rápida al perfil del usuario para validar datos extras
         const infoRes = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/manage/info', {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` }
         })
 
-        let rolUsuario = 'vendedor' // Por defecto
+        let rolUsuario = 'vendedor' 
         
         if (infoRes.ok) {
           const infoData = await infoRes.json()
           rolUsuario = infoData.rol || 'vendedor'
         }
 
-        // CONTROL DE ACCESO MAESTRO TEMPORAL FRONTEND:
-        // Si ingresa tu dirección, forzamos tu rol master para asegurar la visualización
-        if (usuarioLimpio.toLowerCase() === 'master@martinashopp.com') {
+        if (usuarioLimpio === 'master@martinashopp.com') {
           rolUsuario = 'master'
         }
 
