@@ -12,13 +12,16 @@ import ReporteVendedores from './components/ReporteVendedores'
 import ControlCaja from './components/ControlCaja'
 import GestionMediosPago from './components/GestionMediosPago'
 
+// NUEVOS COMPONENTES (Asegurate de crearlos en tu carpeta components)
+import AdminTiendas from './components/AdminTiendas'
+import AdminUsuarios from './components/AdminUsuarios'
+
 function App() {
   const [vistaActual, setVistaActual] = useState('catalogo')
   const [productoAEditar, setProductoAEditar] = useState(null)
   const [carrito, setCarrito] = useState([])
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
-  // Estados para el módulo de vendedores en el carrito
   const [listaVendedores, setListaVendedores] = useState([])
   const [vendedorSeleccionadoId, setVendedorSeleccionadoId] = useState('')
   
@@ -26,7 +29,11 @@ function App() {
     return localStorage.getItem('martina_sesion_activa') === 'true'
   })
 
-  // Carga los vendedores activos al inicializar o cambiar al carrito
+  // NUEVO ESTADO: Almacena el rol del usuario conectado para la barra de navegación
+  const [rolUsuario, setRolUsuario] = useState(() => {
+    return localStorage.getItem('martina_user_rol') || 'vendedor'
+  })
+
   useEffect(() => {
     if (sesionIniciada) {
       fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/vendedores')
@@ -38,18 +45,23 @@ function App() {
     }
   }, [sesionIniciada, vistaActual])
 
-  const iniciarSesion = (token) => {
+  // MODIFICADO: Ahora recibe el token y el rol desde Login.jsx
+  const iniciarSesion = (token, rol) => {
     localStorage.setItem('martina_sesion_activa', 'true')
     localStorage.setItem('martina_user_token', token) 
+    localStorage.setItem('martina_user_rol', rol)
+    setRolUsuario(rol)
     setSesionIniciada(true)
   }
 
   const cerrarSesion = () => {
     localStorage.removeItem('martina_sesion_activa')
     localStorage.removeItem('martina_user_token')
+    localStorage.removeItem('martina_user_rol')
     setCarrito([])
     setIsSidebarOpen(false)
     setVistaActual('catalogo')
+    setRolUsuario('vendedor')
     setSesionIniciada(false)
   }
 
@@ -145,23 +157,25 @@ function App() {
             onClose={() => setIsSidebarOpen(false)} 
             onSeleccionarVista={(vista) => { setVistaActual(vista); setProductoAEditar(null); }}
             onCerrarSesion={cerrarSesion} 
+            usuarioRol={rolUsuario} // PASADO AL SIDEBAR
           />
 
           <main style={{ maxWidth: '800px', margin: '0 auto', padding: '15px', boxSizing: 'border-box' }}>
             
+            {/* NUEVAS VISTAS ADMINISTRATIVAS CONDICIONALES */}
+            {vistaActual === 'abmTiendas' && <AdminTiendas />}
+            {vistaActual === 'abmUsuarios' && <AdminUsuarios />}
+
             {vistaActual === 'ControlCaja' && <ControlCaja />}
             {vistaActual === 'mediosPago' && <GestionMediosPago />}
-
             {vistaActual === 'reporteVendedores' && <ReporteVendedores />}
-
             {vistaActual === 'reporteCompras' && <ReporteCompras />}
-
             {vistaActual === 'gestionVentas' && <GestionVentas />}
-            
             {vistaActual === 'vendedores' && <GestionVendedores />}
 
             {vistaActual === 'catalogo' && (
-              <ListaProductos onEditarProducto={iniciarEdicion} onAgregarAlCarrito={agregarAlCarrito} />
+              <Sidebar layout 
+                <ListaProductos onEditarProducto={iniciarEdicion} onAgregarAlCarrito={agregarAlCarrito} />
             )}
 
             {vistaActual === 'cargar' && (
@@ -172,13 +186,8 @@ function App() {
               />
             )}
 
-            {vistaActual === 'rentabilidad' && (
-              <AdminCategorias />
-            )}
-
-            {vistaActual === 'historial' && (
-              <HistorialVentas />
-            )}
+            {vistaActual === 'rentabilidad' && <AdminCategorias />}
+            {vistaActual === 'historial' && <HistorialVentas />}
 
             {vistaActual === 'carrito' && (
               <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
@@ -234,7 +243,6 @@ function App() {
                       </div>
                     ))}
 
-                    {/* Selector de Vendedores para el mostrador */}
                     <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f1f5f9', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
                       <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', fontSize: '14px', color: '#334155' }}>👤 ¿Quién realizó esta venta?</label>
                       <select 

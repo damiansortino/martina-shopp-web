@@ -1,4 +1,4 @@
-function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion }) {
+function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion, usuarioRol }) {
   if (!isOpen) return null
 
   return (
@@ -30,7 +30,6 @@ function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion }) {
             <span style={{ marginRight: '10px' }}>📊</span>Gestionar Ventas
           </button>
 
-          {/* AGREGADO: Botón de acceso al Arqueo y Control de Caja */}
           <button onClick={() => { onSeleccionarVista('controlCaja'); onClose(); }} style={btnMenuNomad} >
             <span style={{ marginRight: '10px' }}>🏪</span>Control de Caja
           </button>
@@ -47,6 +46,19 @@ function Sidebar({ isOpen, onClose, onSeleccionarVista, onCerrarSesion }) {
           <button onClick={() => { onSeleccionarVista('reporteVendedores'); onClose(); }} style={btnMenuNomad}>
             <span style={{ marginRight: '10px' }}>📊</span>Ranking Vendedores
           </button>
+
+          {/* AGREGADO: Opciones exclusivas para el rol Master */}
+          {usuarioRol === 'master' && (
+            <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #edf2f7' }}>
+              <p style={{ margin: '0 0 10px 5px', fontSize: '12px', color: '#a0aec0', fontWeight: 'bold', letterSpacing: '0.5px' }}>SAAS ADMIN</p>
+              <button onClick={() => { onSeleccionarVista('abmTiendas'); onClose(); }} style={btnMenuNomad}>
+                <span style={{ marginRight: '10px' }}>🏢</span>Administrar Tiendas
+              </button>
+              <button onClick={() => { onSeleccionarVista('abmUsuarios'); onClose(); }} style={btnMenuNomad}>
+                <span style={{ marginRight: '10px' }}>👥</span>Administrar Usuarios
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Botón de Cerrar Sesión fijado firmemente en la base */}

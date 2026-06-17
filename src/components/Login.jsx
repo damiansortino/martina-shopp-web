@@ -12,18 +12,35 @@ function Login({ onLoginExitoso }) {
     setCargando(true)
 
     try {
+      // 1. Petición de Login estándar a Identity
       const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          username: email, // Mapea el campo de texto al "Username" que espera C#
+          username: email, 
           password: password 
         })
       })
 
       if (res.ok) {
         const data = await res.json()
-        onLoginExitoso(data.token) // Guarda el token real en localStorage a través de App.jsx
+        const token = data.accessToken || data.token; // Soporta ambos formatos de token
+
+        // 2. Consulta rápida al perfil del usuario logueado para extraer su información extendida (Rol)
+        const infoRes = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/api/auth/manage/info', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+
+        let rolUsuario = 'vendedor'; // Rol base por defecto
+        if (infoRes.ok) {
+          const infoData = await infoRes.json()
+          // Identity mapea las propiedades custom dentro de un objeto o claims. Si no viene explícito, asumimos vendedor
+          rolUsuario = infoData.rol || 'vendedor';
+        }
+
+        // Envía tanto el token como el rol al contenedor global para actualizar la UI y la Sidebar
+        onLoginExitoso(token, rolUsuario) 
       } else {
         setError('Credenciales incorrectas. Verifique e intente nuevamente.')
       }
