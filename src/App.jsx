@@ -12,7 +12,7 @@ import ReporteVendedores from './components/ReporteVendedores'
 import ControlCaja from './components/ControlCaja'
 import GestionMediosPago from './components/GestionMediosPago'
 
-// NUEVOS COMPONENTES (Asegurate de crearlos en tu carpeta components)
+// NUEVOS COMPONENTES
 import AdminTiendas from './components/AdminTiendas'
 import AdminUsuarios from './components/AdminUsuarios'
 
@@ -29,7 +29,6 @@ function App() {
     return localStorage.getItem('martina_sesion_activa') === 'true'
   })
 
-  // NUEVO ESTADO: Almacena el rol del usuario conectado para la barra de navegación
   const [rolUsuario, setRolUsuario] = useState(() => {
     return localStorage.getItem('martina_user_rol') || 'vendedor'
   })
@@ -45,7 +44,6 @@ function App() {
     }
   }, [sesionIniciada, vistaActual])
 
-  // MODIFICADO: Ahora recibe el token y el rol desde Login.jsx
   const iniciarSesion = (token, rol) => {
     localStorage.setItem('martina_sesion_activa', 'true')
     localStorage.setItem('martina_user_token', token) 
@@ -107,7 +105,7 @@ function App() {
           fecha: new Date().toISOString(),
           total: 0,
           vendedorId: vendedorSeleccionadoId ? parseInt(vendedorSeleccionadoId) : null,
-          detalles: detallesMapeados
+          detalles: detailsMapeados
         })
       })
 
@@ -157,7 +155,7 @@ function App() {
             onClose={() => setIsSidebarOpen(false)} 
             onSeleccionarVista={(vista) => { setVistaActual(vista); setProductoAEditar(null); }}
             onCerrarSesion={cerrarSesion} 
-            usuarioRol={rolUsuario} // PASADO AL SIDEBAR
+            usuarioRol={rolUsuario} 
           />
 
           <main style={{ maxWidth: '800px', margin: '0 auto', padding: '15px', boxSizing: 'border-box' }}>
@@ -173,9 +171,9 @@ function App() {
             {vistaActual === 'gestionVentas' && <GestionVentas />}
             {vistaActual === 'vendedores' && <GestionVendedores />}
 
+            {/* CORREGIDO: Removido tag inválido de Sidebar que rompía el compilador */}
             {vistaActual === 'catalogo' && (
-              <Sidebar layout 
-                <ListaProductos onEditarProducto={iniciarEdicion} onAgregarAlCarrito={agregarAlCarrito} />
+              <ListaProductos onEditarProducto={iniciarEdicion} onAgregarAlCarrito={agregarAlCarrito} />
             )}
 
             {vistaActual === 'cargar' && (
