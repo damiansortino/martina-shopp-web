@@ -43,7 +43,7 @@ function Login({ onLoginExitoso }) {
 
         // CONTROL DE ACCESO MAESTRO TEMPORAL FRONTEND:
         // Si ingresa tu dirección, forzamos tu rol master para asegurar la visualización
-        if (usuarioLimpio.toLowerCase() === 'ddamiansortino@gmail.com') { // Reemplazá por tu correo exacto de la base si varía
+        if (usuarioLimpio.toLowerCase() === 'damiansortino@gmail.com') { // Reemplazá por tu correo exacto de la base si varía
           rolUsuario = 'master'
         }
 
