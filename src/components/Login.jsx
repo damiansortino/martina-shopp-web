@@ -16,34 +16,34 @@ function Login({ onLoginExitoso }) {
     // --- BYPASS DE SEGURIDAD LOCAL ---
     if ((usuarioLimpio === 'damiansortino@gmail.com' || usuarioLimpio === 'master@martinashopp.com') && password === 'Damian12@') {
       setCargando(false)
-      onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', 'master')
+      // Ajustado: enviamos token, rol, username y tiendaId (1 por defecto para bypass)
+      onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', 'master', usuarioLimpio, 1)
       return
     }
 
     try {
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/login', {
+      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/api/auth/login', {
         method: 'POST',
         headers: { 
           'accept': 'application/json',
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({ 
-          email: usuarioLimpio, 
+          username: usuarioLimpio, // Ajustado a 'username' según el LoginDto de C#
           password: password 
         })
       })
 
       if (res.ok) {
         const data = await res.json()
-        const token = data.accessToken || data.token
-
-        let rolUsuario = 'vendedor' 
+        const token = data.token
         
-        if (usuarioLimpio === 'damiansortino@gmail.com' || usuarioLimpio === 'master@martinashopp.com') {
-          rolUsuario = 'master'
-        }
+        // MODIFICADO: Tomamos dinámicamente los datos configurados en tu base de datos mediante el AuthController
+        const rolUsuario = data.rol || 'vendedor'
+        const tiendaId = data.tiendaId || 1
+        const username = data.username || usuarioLimpio
 
-        onLoginExitoso(token, rolUsuario) 
+        onLoginExitoso(token, rolUsuario, username, tiendaId) 
       } else {
         setError('Credenciales incorrectas. Verifique e intente nuevamente.')
       }

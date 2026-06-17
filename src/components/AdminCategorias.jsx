@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Asegurate de validar que la ruta relativa sea correcta
 
 function AdminCategorias() {
   const [categorias, setCategorias] = useState([])
@@ -14,11 +15,9 @@ function AdminCategorias() {
 
   const traerCategorias = async () => {
     try {
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/categorias')
-      if (res.ok) {
-        const data = await res.json()
-        setCategorias(data)
-      }
+      // Reemplazado por apiFetch para inyectar token de aislamiento tenant
+      const data = await apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/categorias')
+      setCategorias(data)
     } catch (err) {
       console.error("Error al cargar categorías:", err)
     }
@@ -50,9 +49,9 @@ function AdminCategorias() {
     const metodo = esEdicion ? 'PUT' : 'POST'
 
     try {
-      const res = await fetch(url, {
+      // Reemplazado por apiFetch (removido Header de Content-Type manual)
+      const res = await apiFetch(url, {
         method: metodo,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: esEdicion ? categoriaAEditar.id : 0,
           nombre,
@@ -60,11 +59,10 @@ function AdminCategorias() {
         })
       })
 
-      if (res.ok) {
-        alert(esEdicion ? '¡Categoría actualizada con éxito!' : '¡Categoría creada con éxito!')
-        cancelarEdicion()
-        traerCategorias()
-      }
+      // El interceptor devuelve directamente el JSON resuelto
+      alert(esEdicion ? '¡Categoría actualizada con éxito!' : '¡Categoría creada con éxito!')
+      cancelarEdicion()
+      traerCategorias()
     } catch (err) {
       console.error("Error al guardar categoría:", err)
     }
@@ -138,4 +136,4 @@ const labelStyle = { display: 'block', marginBottom: '4px', fontSize: '13px', fo
 const inputStyle = { width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '6px', border: '1px solid #ccc', fontSize: '15px' }
 const btnPrimaryStyle = { width: '100%', padding: '10px', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold' }
 
-export default AdminCategorias
+export default AdminCategorias;

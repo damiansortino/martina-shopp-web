@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Valida que la ruta relativa sea correcta según tu estructura
 
 function HistorialVentas() {
   const [ventas, setVentas] = useState([])
   const [topProductos, setTopProductos] = useState([])
 
   useEffect(() => {
-    fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/ventas')
-      .then(res => res.json())
+    // Reemplazado por apiFetch para inyectar automáticamente el Bearer token
+    apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/ventas')
       .then(data => {
         setVentas(data)
         
@@ -26,6 +27,7 @@ function HistorialVentas() {
             } else {
               conteoProductos[pId] = {
                 nombre: nombreProd,
+                amountTotal: cantidad, // Se mapea directo de la propiedad estructurada
                 cantidadTotal: cantidad
               }
             }
@@ -100,7 +102,7 @@ function HistorialVentas() {
               </span>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {/* NUEVO: Visualización del Medio de Pago */}
+                {/* Visualización del Medio de Pago */}
                 <span style={{ 
                   color: '#1e293b', 
                   fontSize: '12px', 
@@ -127,4 +129,4 @@ function HistorialVentas() {
   )
 }
 
-export default HistorialVentas
+export default HistorialVentas;

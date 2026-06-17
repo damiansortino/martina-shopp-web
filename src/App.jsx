@@ -33,21 +33,32 @@ function App() {
     return localStorage.getItem('martina_user_rol') || 'vendedor'
   })
 
+  // Se extrae la tienda del usuario logueado para aislar los datos
+  const tiendaUsuarioId = parseInt(localStorage.getItem('martina_user_tienda_id'))
+
   useEffect(() => {
     if (sesionIniciada) {
       fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/vendedores')
         .then(res => res.json())
         .then(data => {
-          setListaVendedores(data.filter(v => v.activo))
+          // FILTRO MULTI-TENANT: El rol master audita todo; admin y vendedor ven solo su tienda
+          if (rolUsuario === 'master') {
+            setListaVendedores(data.filter(v => v.activo))
+          } else {
+            setListaVendedores(data.filter(v => v.activo && v.tiendaId === tiendaUsuarioId))
+          }
         })
         .catch(err => console.error("Error al traer vendedores:", err))
     }
-  }, [sesionIniciada, vistaActual])
+  }, [sesionIniciada, vistaActual, rolUsuario, tiendaUsuarioId])
 
-  const iniciarSesion = (token, rol) => {
+  // Ajustado para capturar el username y el tiendaId desde las respuestas del controlador de C#
+  const iniciarSesion = (token, rol, username, tiendaId) => {
     localStorage.setItem('martina_sesion_activa', 'true')
     localStorage.setItem('martina_user_token', token) 
     localStorage.setItem('martina_user_rol', rol)
+    localStorage.setItem('martina_user_username', username)
+    localStorage.setItem('martina_user_tienda_id', tiendaId)
     setRolUsuario(rol)
     setSesionIniciada(true)
   }
@@ -56,6 +67,8 @@ function App() {
     localStorage.removeItem('martina_sesion_activa')
     localStorage.removeItem('martina_user_token')
     localStorage.removeItem('martina_user_rol')
+    localStorage.removeItem('martina_user_username')
+    localStorage.removeItem('martina_user_tienda_id')
     setCarrito([])
     setIsSidebarOpen(false)
     setVistaActual('catalogo')
@@ -105,7 +118,7 @@ function App() {
           fecha: new Date().toISOString(),
           total: 0,
           vendedorId: vendedorSeleccionadoId ? parseInt(vendedorSeleccionadoId) : null,
-          detalles: detailsMapeados
+          detalles: detallesMapeados
         })
       })
 
@@ -143,6 +156,16 @@ function App() {
             <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '22px', cursor: 'pointer', marginRight: '15px' }}>☰</button>
             <h2 style={{ margin: 0, fontSize: '20px', flexGrow: 1 }}>MartinaShopp Dashboard</h2>
             
+            {/* COMPONENTE VISUAL: Muestra el perfil e identificadores de seguridad del tenant */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '20px', backgroundColor: 'rgba(255, 255, 255, 0.15)', padding: '4px 12px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+              <span style={{ fontSize: '13px', fontWeight: 'bold', lineHeight: '1.2' }}>
+                👤 {localStorage.getItem('martina_user_username') || 'Usuario'}
+              </span>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 'bold', color: rolUsuario === 'master' ? '#6ee7b7' : rolUsuario === 'admin' ? '#fde047' : '#cbd5e1' }}>
+                {rolUsuario} {localStorage.getItem('martina_user_tienda_id') ? `(ID Tienda: ${localStorage.getItem('martina_user_tienda_id')})` : ''}
+              </span>
+            </div>
+
             {vistaActual !== 'carrito' && carrito.length > 0 && (
               <button onClick={() => setVistaActual('carrito')} style={{ backgroundColor: '#28a745', border: 'none', color: 'white', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
                 🛒 Ver Carrito ({carrito.reduce((acc, item) => acc + item.cantidad, 0)})
@@ -171,7 +194,6 @@ function App() {
             {vistaActual === 'gestionVentas' && <GestionVentas />}
             {vistaActual === 'vendedores' && <GestionVendedores />}
 
-            {/* CORREGIDO: Removido tag inválido de Sidebar que rompía el compilador */}
             {vistaActual === 'catalogo' && (
               <ListaProductos onEditarProducto={iniciarEdicion} onAgregarAlCarrito={agregarAlCarrito} />
             )}
@@ -281,4 +303,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

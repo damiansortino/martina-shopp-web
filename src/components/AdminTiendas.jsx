@@ -1,24 +1,19 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api'
 
 function AdminTiendas() {
   const [tiendas, setTiendas] = useState([])
   const [nombre, setNombre] = useState('')
   const [cargando, setCargando] = useState(false)
 
-  const API_URL = 'https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/tiendas'
-  const token = localStorage.getItem('martina_user_token')
+  const BASE_URL = 'https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net'
 
   const cargarTiendas = async () => {
     try {
-      const res = await fetch(API_URL, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setTiendas(data)
-      }
+      const data = await apiFetch(`${BASE_URL}/tiendas`)
+      setTiendas(data)
     } catch (err) {
-      console.error('Error al traer tiendas:', err)
+      console.error('Error al cargar tiendas:', err)
     }
   }
 
@@ -32,24 +27,24 @@ function AdminTiendas() {
     setCargando(true)
 
     try {
-      const res = await fetch(API_URL, {
+      const data = await apiFetch(`${BASE_URL}/tiendas`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ nombre: nombre.trim() })
+        body: JSON.stringify({
+          nombre: nombre.trim(),
+          activa: true
+        })
       })
 
-      if (res.ok) {
+      if (data && data.message) {
+        alert(`Error: ${data.message}`)
+      } else {
         setNombre('')
         cargarTiendas()
-        alert('Tienda dada de alta correctamente.')
-      } else {
-        alert('Hubo un problema al crear la tienda.')
+        alert('Tienda creada con éxito.')
       }
     } catch (err) {
       console.error(err)
+      alert('Error de conexión al crear la tienda.')
     } finally {
       setCargando(false)
     }
@@ -57,12 +52,8 @@ function AdminTiendas() {
 
   const toggleEstado = async (tienda) => {
     try {
-      const res = await fetch(`${API_URL}/${tienda.id}`, {
+      const data = await apiFetch(`${BASE_URL}/tiendas/${tienda.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           id: tienda.id,
           nombre: tienda.nombre,
@@ -70,45 +61,46 @@ function AdminTiendas() {
         })
       })
 
-      if (res.ok) {
+      if (data && data.message) {
+        alert(`Error: ${data.message}`)
+      } else {
         cargarTiendas()
       }
     } catch (err) {
       console.error(err)
+      alert('Error al modificar el estado de la tienda.')
     }
   }
 
   return (
     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
-      <h3 style={{ marginTop: 0, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>🏢 Administración de Tiendas</h3>
+      <h3 style={{ marginTop: 0, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>🏢 Administración de Tiendas (SaaS Multi-Tenant)</h3>
 
-      {/* Formulario de Alta */}
-      <form onSubmit={manejarSubmit} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <form onSubmit={manejarSubmit} style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
         <input
           type="text"
-          placeholder="Nombre de la nueva tienda / comercio"
+          placeholder="Nombre de la nueva sucursal / tienda"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           required
-          style={{ flexGrow: 1, padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+          style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
         />
         <button
           type="submit"
           disabled={cargando}
           style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
         >
-          {cargando ? 'Registrando...' : '➕ Crear Tienda'}
+          {cargando ? 'Guardando...' : 'Crear Tienda'}
         </button>
       </form>
 
-      {/* Tabla de Listado */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ borderBottom: '2px solid #cbd5e1', textAlign: 'left', backgroundColor: '#f1f5f9' }}>
-            <th style={{ padding: '10px' }}>ID</th>
-            <th style={{ padding: '10px' }}>Nombre</th>
-            <th style={{ padding: '10px' }}>Estado</th>
-            <th style={{ padding: '10px', textAlign: 'right' }}>Acción</th>
+            <th style={{ padding: '10px', width: '60px' }}>ID</th>
+            <th style={{ padding: '10px' }}>Nombre Comercial</th>
+            <th style={{ padding: '10px', width: '120px' }}>Estado</th>
+            <th style={{ padding: '10px', width: '150px', textAlign: 'right' }}>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -152,4 +144,4 @@ function AdminTiendas() {
   )
 }
 
-export default AdminTiendas
+export default AdminTiendas;

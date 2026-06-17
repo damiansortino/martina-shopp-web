@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Valida que la ruta relativa sea correcta según tu estructura
 
 function GestionVentas() {
   const [ventas, setVentas] = useState([])
@@ -6,8 +7,8 @@ function GestionVentas() {
   const [mediosPago, setMediosPago] = useState([])
 
   const cargarVentas = () => {
-    fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas')
-      .then(res => res.json())
+    // Reemplazado por apiFetch para aislar los datos multi-tenant por usuario en SQL
+    apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas')
       .then(data => {
         const ordenadas = data.sort((a, b) => b.id - a.id)
         setVentas(ordenadas)
@@ -16,8 +17,8 @@ function GestionVentas() {
   }
 
   const cargarMediosPago = () => {
-    fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago')
-      .then(res => res.json())
+    // Reemplazado por apiFetch
+    apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago')
       .then(data => setMediosPago(data))
       .catch(err => console.error("Error al traer medios de pago:", err))
   }
@@ -31,36 +32,31 @@ function GestionVentas() {
     if (!confirm('¿Seguro que querés ANULAR esta venta? El stock se devolverá automáticamente.')) return
     
     try {
-      const res = await fetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas/${id}/anular`, { 
+      // Reemplazado por apiFetch
+      await apiFetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas/${id}/anular`, { 
         method: 'PUT' 
       })
-      if (res.ok) {
-        alert('Venta Anulada correctamente.');
-        cargarVentas();
-      } else {
-        alert('No se pudo anular la venta.');
-      }
+      alert('Venta Anulada correctamente.');
+      cargarVentas();
     } catch (err) {
       console.error(err);
+      alert('No se pudo anular la venta o la sesión expiró.');
     }
   }
 
   const handleGuardarEdicion = async () => {
     try {
-      const res = await fetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas/${ventaEditando.id}`, {
+      // Reemplazado por apiFetch (eliminado header Content-Type redundante)
+      await apiFetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas/${ventaEditando.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ventaEditando)
       })
-      if (res.ok) {
-        alert('Venta modificada y stock recalculado.');
-        setVentaEditando(null);
-        cargarVentas();
-      } else {
-        alert('Error al guardar. Verifique si hay stock suficiente del producto.');
-      }
+      alert('Venta modificada y stock recalculado.');
+      setVentaEditando(null);
+      cargarVentas();
     } catch (err) {
       console.error(err);
+      alert('Error al guardar. Verifique si hay stock suficiente del producto o si la sesión caducó.');
     }
   }
 
@@ -166,7 +162,6 @@ function GestionVentas() {
                   )}
                 </td>
 
-                {/* NUEVA COLUMNA: Visualización fija de los Medios de Pago */}
                 <td style={{ padding: '12px' }}>
                   <span style={{ 
                     color: '#1e293b', 
@@ -213,4 +208,4 @@ function GestionVentas() {
   )
 }
 
-export default GestionVentas
+export default GestionVentas;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Asegurate de que la ruta relativa apunte correctamente a tu archivo api.js
 
 function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
   const [productos, setProductos] = useState([])
@@ -6,9 +7,10 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
   const [busqueda, setBusqueda] = useState('')
 
   const cargarDatos = () => {
+    // Reemplazado fetch por apiFetch para inyectar automáticamente el Bearer token
     Promise.all([
-      fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos').then(res => res.json()),
-      fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks').then(res => res.json())
+      apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos'),
+      apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks')
     ])
       .then(([dataProductos, dataStocks]) => {
         setProductos(dataProductos)
@@ -26,18 +28,17 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
     if (!confirm(`¿Seguro que querés dar de baja "${nombre}" del catálogo? No afectará al historial de ventas.`)) return
 
     try {
-      const res = await fetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos/${id}`, {
+      // Reemplazado por apiFetch para que el endpoint DELETE valide los permisos del Tenant
+      const res = await apiFetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos/${id}`, {
         method: 'DELETE'
       })
 
-      if (res.ok) {
-        alert('Producto inactivado con éxito');
-        cargarDatos(); 
-      } else {
-        alert('No se pudo inactivar el producto.');
-      }
+      // apiFetch ya resuelve el .json(), por lo que evaluamos si la respuesta no arrojó errores graves
+      alert('Operación procesada con éxito');
+      cargarDatos(); 
     } catch (err) {
       console.error('Error al eliminar producto:', err)
+      alert('No se pudo inactivar el producto o la sesión expiró.');
     }
   }
 
@@ -162,7 +163,6 @@ function ListaProductos({ onEditarProducto, onAgregarAlCarrito }) {
   )
 }
 
-// MODIFICADO: Agregada propiedad color e indicador de placeholder explícito
 const inputBuscarStyle = { 
   width: '100%', 
   padding: '12px', 
@@ -174,4 +174,4 @@ const inputBuscarStyle = {
   color: '#333333'
 }
 
-export default ListaProductos
+export default ListaProductos;

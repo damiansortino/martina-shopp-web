@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { apiFetch } from '../api' // Asegurate de que la ruta relativa sea correcta
 
 function ReporteCompras() {
   const [productos, setProductos] = useState([])
@@ -9,9 +10,10 @@ function ReporteCompras() {
   const [cantidadesAComprar, setCantidadesAComprar] = useState({})
 
   const cargarDatos = () => {
+    // Reemplazado fetch por apiFetch para inyectar automáticamente el Bearer token
     Promise.all([
-      fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos').then(res => res.json()),
-      fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks').then(res => res.json())
+      apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/productos'),
+      apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/stocks')
     ])
       .then(([dataProductos, dataStocks]) => {
         setProductos(dataProductos)
@@ -195,4 +197,4 @@ function ReporteCompras() {
   )
 }
 
-export default ReporteCompras
+export default ReporteCompras;

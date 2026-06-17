@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Valida que la ruta relativa sea correcta según tu estructura
 
 function GestionVendedores() {
   const [vendedores, setVendedores] = useState([])
@@ -9,8 +10,9 @@ function GestionVendedores() {
 
   const cargarVendedores = async () => {
     try {
-      const res = await fetch(API_URL)
-      if (res.ok) setVendedores(await res.json())
+      // Reemplazado por apiFetch para garantizar el aislamiento multi-tenant
+      const data = await apiFetch(API_URL)
+      setVendedores(data)
     } catch (err) {
       console.error("Error al cargar vendedores:", err)
     }
@@ -35,17 +37,15 @@ function GestionVendedores() {
     }
 
     try {
-      const res = await fetch(url, {
+      // Reemplazado por apiFetch (eliminado header Content-Type manual)
+      await apiFetch(url, {
         method: metodo,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cuerpo)
       })
 
-      if (res.ok) {
-        setNombre('')
-        setIdEditar(null)
-        cargarVendedores()
-      }
+      setNombre('')
+      setIdEditar(null)
+      cargarVendedores()
     } catch (err) {
       console.error("Error al guardar vendedor:", err)
     }
@@ -58,9 +58,9 @@ function GestionVendedores() {
 
   const cambiarEstadoVendedor = async (vendedor) => {
     try {
-      await fetch(`${API_URL}/${vendedor.id}`, {
+      // Reemplazado por apiFetch
+      await apiFetch(`${API_URL}/${vendedor.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...vendedor, activo: !vendedor.activo })
       })
       cargarVendedores()
@@ -123,4 +123,4 @@ function GestionVendedores() {
   )
 }
 
-export default GestionVendedores
+export default GestionVendedores;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Valida que la ruta relativa sea correcta
 
 function ReporteVendedores() {
   const [ventas, setVentas] = useState([])
@@ -14,9 +15,10 @@ function ReporteVendedores() {
   const [fechaHasta, setFechaHasta] = useState(() => new Date().toISOString().split('T')[0])
 
   useEffect(() => {
+    // Reemplazado por apiFetch para heredar la inyección del Bearer token
     Promise.all([
-      fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas').then(res => res.json()),
-      fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/vendedores').then(res => res.json())
+      apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas'),
+      apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/vendedores')
     ])
     .then(([dataVentas, dataVendedores]) => {
       setVentas(dataVentas)
@@ -145,4 +147,4 @@ const labelStyle = { display: 'block', fontSize: '12px', color: '#4a5568', fontW
 const inputDateStyle = { padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '14px' }
 const btnFiltroRapidoStyle = { padding: '6px 12px', backgroundColor: '#e2e8f0', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: '#334155' }
 
-export default ReporteVendedores
+export default ReporteVendedores;

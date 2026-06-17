@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../api' // Valida que la ruta relativa sea la adecuada
 
 function GestionMediosPago() {
   const [medios, setMedios] = useState([])
@@ -6,8 +7,8 @@ function GestionMediosPago() {
   const [cargando, setCargando] = useState(false)
 
   const cargarMedios = () => {
-    fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago')
-      .then(res => res.json())
+    // Reemplazado por apiFetch para inyectar la cabecera de autenticación
+    apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago')
       .then(data => setMedios(data))
       .catch(err => console.error("Error al cargar medios de pago:", err))
   }
@@ -22,21 +23,17 @@ function GestionMediosPago() {
     setCargando(true)
 
     try {
-      // Usamos el mismo endpoint de la Caja apuntando a la base para dar de alta
-      const res = await fetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago', {
+      // Reemplazado por apiFetch. Se eliminó la configuración explícita de cabeceras
+      const res = await apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: nuevoNombre, activo: true })
       })
 
-      if (res.ok) {
-        setNuevoNombre('')
-        cargarMedios()
-      } else {
-        alert('No se pudo crear el medio de pago.')
-      }
+      setNuevoNombre('')
+      cargarMedios()
     } catch (err) {
       console.error(err)
+      alert('No se pudo crear el medio de pago o la sesión expiró.')
     } finally {
       setCargando(false)
     }
@@ -44,19 +41,16 @@ function GestionMediosPago() {
 
   const handleToggleActivo = async (medio) => {
     try {
-      const res = await fetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago/${medio.id}`, {
+      // Reemplazado por apiFetch
+      await apiFetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago/${medio.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...medio, activo: !medio.activo })
       })
 
-      if (res.ok) {
-        cargarMedios()
-      } else {
-        alert('No se pudo actualizar el estado.')
-      }
+      cargarMedios()
     } catch (err) {
       console.error(err)
+      alert('No se pudo actualizar el estado.')
     }
   }
 
@@ -139,4 +133,4 @@ function GestionMediosPago() {
   )
 }
 
-export default GestionMediosPago
+export default GestionMediosPago;
