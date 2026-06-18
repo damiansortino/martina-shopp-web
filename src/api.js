@@ -24,6 +24,13 @@ export const apiFetch = async (url, options = {}) => {
     localStorage.removeItem('martina_sesion_activa');
     localStorage.removeItem('martina_user_token');
     window.location.reload(); // Fuerza la redirección al Login
+    return;
+  }
+
+  // --- SOLUCIÓN AL ERROR ---
+  // Si el estado es 204 (No Content) o la respuesta está vacía, no intentamos parsear JSON
+  if (response.status === 204 || response.headers.get("content-length") === "0") {
+    return null;
   }
 
   return response.json();

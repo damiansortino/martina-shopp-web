@@ -16,8 +16,7 @@ function Login({ onLoginExitoso }) {
     // --- BYPASS DE SEGURIDAD LOCAL ---
     if ((usuarioLimpio === 'damiansortino@gmail.com' || usuarioLimpio === 'master@martinashopp.com') && password === 'Damian12@') {
       setCargando(false)
-      // Ajustado: enviamos token, rol, username y tiendaId (1 por defecto para bypass)
-      onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', 'master', usuarioLimpio, 1)
+      onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', usuarioLimpio)
       return
     }
 
@@ -29,7 +28,7 @@ function Login({ onLoginExitoso }) {
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({ 
-          username: usuarioLimpio, // Ajustado a 'username' según el LoginDto de C#
+          username: usuarioLimpio,
           password: password 
         })
       })
@@ -37,13 +36,9 @@ function Login({ onLoginExitoso }) {
       if (res.ok) {
         const data = await res.json()
         const token = data.token
-        
-        // MODIFICADO: Tomamos dinámicamente los datos configurados en tu base de datos mediante el AuthController
-        const rolUsuario = data.rol || 'vendedor'
-        const tiendaId = data.tiendaId || 1
         const username = data.username || usuarioLimpio
 
-        onLoginExitoso(token, rolUsuario, username, tiendaId) 
+        onLoginExitoso(token, username) 
       } else {
         setError('Credenciales incorrectas. Verifique e intente nuevamente.')
       }

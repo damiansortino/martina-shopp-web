@@ -7,7 +7,6 @@ function GestionVentas() {
   const [mediosPago, setMediosPago] = useState([])
 
   const cargarVentas = () => {
-    // Reemplazado por apiFetch para aislar los datos multi-tenant por usuario en SQL
     apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas')
       .then(data => {
         const ordenadas = data.sort((a, b) => b.id - a.id)
@@ -17,7 +16,6 @@ function GestionVentas() {
   }
 
   const cargarMediosPago = () => {
-    // Reemplazado por apiFetch
     apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Caja/medios-pago')
       .then(data => setMediosPago(data))
       .catch(err => console.error("Error al traer medios de pago:", err))
@@ -32,7 +30,6 @@ function GestionVentas() {
     if (!confirm('¿Seguro que querés ANULAR esta venta? El stock se devolverá automáticamente.')) return
     
     try {
-      // Reemplazado por apiFetch
       await apiFetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas/${id}/anular`, { 
         method: 'PUT' 
       })
@@ -46,7 +43,6 @@ function GestionVentas() {
 
   const handleGuardarEdicion = async () => {
     try {
-      // Reemplazado por apiFetch (eliminado header Content-Type redundante)
       await apiFetch(`https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/Ventas/${ventaEditando.id}`, {
         method: 'PUT',
         body: JSON.stringify(ventaEditando)
@@ -65,18 +61,20 @@ function GestionVentas() {
       <div style={{ background: '#fff', padding: '25px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
         <h3 style={{ margin: '0 0 20px 0', color: '#2d3748' }}>✏️ Modificar Cantidades - Venta #{ventaEditando.id}</h3>
         
-        {/* Selector del Medio de Pago en la Edición */}
+        {/* Mostrar advertencia explicativa sobre la edición de pagos combinados en el historial */}
         <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-          <label style={{ display: 'block', fontSize: '13px', color: '#4a5568', fontWeight: 'bold', marginBottom: '6px' }}>Medio de Pago:</label>
-          <select
-            value={ventaEditando.medioPagoId || ''}
-            onChange={e => setVentaEditando({ ...ventaEditando, medioPagoId: parseInt(e.target.value) })}
-            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff', color: '#333333', width: '100%', fontSize: '14px', fontWeight: '500' }}
-          >
-            {mediosPago.map(m => (
-              <option key={m.id} value={m.id}>{m.nombre}</option>
-            ))}
-          </select>
+          <label style={{ display: 'block', fontSize: '13px', color: '#4a5568', fontWeight: 'bold', marginBottom: '6px' }}>Medios de Pago Registrados:</label>
+          <div style={{ fontSize: '14px', color: '#333' }}>
+            {ventaEditando.pagos && ventaEditando.pagos.length > 0 ? (
+              ventaEditando.pagos.map((p, idx) => (
+                <div key={idx} style={{ marginBottom: '4px' }}>
+                  • <strong>{p.medioPago?.nombre || 'Desconocido'}:</strong> ${p.monto.toFixed(2)}
+                </div>
+              ))
+            ) : (
+              <span style={{ fontStyle: 'italic', color: '#777' }}>No se encontraron registros de pago.</span>
+            )}
+          </div>
         </div>
 
         {ventaEditando.detalles.map((item, idx) => (
@@ -138,7 +136,7 @@ function GestionVentas() {
               <th style={{ padding: '12px', color: '#4a5568' }}>ID</th>
               <th style={{ color: '#4a5568' }}>Fecha</th>
               <th style={{ color: '#4a5568' }}>Vendedor</th>
-              <th style={{ color: '#4a5568' }}>Medio Pago</th>
+              <th style={{ color: '#4a5568' }}>Medios de Pago / Distribución</th>
               <th style={{ color: '#4a5568' }}>Total</th>
               <th style={{ color: '#4a5568' }}>Estado</th>
               <th style={{ textAlign: 'center', color: '#4a5568' }}>Acciones</th>
@@ -162,18 +160,28 @@ function GestionVentas() {
                   )}
                 </td>
 
+                {/* Renderizar dinámicamente la lista de pagos de la venta */}
                 <td style={{ padding: '12px' }}>
-                  <span style={{ 
-                    color: '#1e293b', 
-                    fontSize: '13px', 
-                    fontWeight: 'bold', 
-                    backgroundColor: '#e2e8f0', 
-                    padding: '4px 8px', 
-                    borderRadius: '4px',
-                    display: 'inline-block'
-                  }}>
-                    {v.medioPago?.nombre || 'Efectivo'}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {v.pagos && v.pagos.length > 0 ? (
+                      v.pagos.map((p, idx) => (
+                        <span key={idx} style={{ 
+                          color: '#1e293b', 
+                          fontSize: '12px', 
+                          fontWeight: 'bold', 
+                          backgroundColor: '#e2e8f0', 
+                          padding: '3px 6px', 
+                          borderRadius: '4px',
+                          display: 'inline-block',
+                          width: 'fit-content'
+                        }}>
+                          💳 {p.medioPago?.nombre || 'Medio Desconocido'}: ${p.monto.toFixed(2)}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ color: '#777', fontSize: '12px', fontStyle: 'italic' }}>Efectivo</span>
+                    )}
+                  </div>
                 </td>
                 
                 <td style={{ fontWeight: '600', color: '#2d3748' }}>${v.total?.toFixed(2)}</td>

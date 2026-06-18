@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react'
-import { apiFetch } from '../api' // Valida que la ruta relativa sea correcta según tu estructura
+import { apiFetch } from '../api' 
 
 function HistorialVentas() {
   const [ventas, setVentas] = useState([])
   const [topProductos, setTopProductos] = useState([])
 
   useEffect(() => {
-    // Reemplazado por apiFetch para inyectar automáticamente el Bearer token
     apiFetch('https://martinashoppapi-amckexfrdfgeb3e8.canadacentral-01.azurewebsites.net/ventas')
       .then(data => {
         setVentas(data)
         
-        // Calcular el Top 3 de productos más vendidos
         const conteoProductos = {}
 
         data.forEach(v => {
@@ -27,7 +25,7 @@ function HistorialVentas() {
             } else {
               conteoProductos[pId] = {
                 nombre: nombreProd,
-                amountTotal: cantidad, // Se mapea directo de la propiedad estructurada
+                amountTotal: cantidad, 
                 cantidadTotal: cantidad
               }
             }
@@ -102,19 +100,28 @@ function HistorialVentas() {
               </span>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {/* Visualización del Medio de Pago */}
-                <span style={{ 
-                  color: '#1e293b', 
-                  fontSize: '12px', 
-                  fontWeight: 'bold', 
-                  backgroundColor: '#edf2f7', 
-                  padding: '4px 8px', 
-                  borderRadius: '4px'
-                }}>
-                  💳 {v.medioPago?.nombre || 'Efectivo'}
-                </span>
                 <span style={{ color: '#28a745', fontSize: '16px', fontWeight: 'bold' }}>Total: ${v.total.toFixed(2)}</span>
               </div>
+            </div>
+
+            {/* Desglose de los múltiples medios de pago utilizados */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px dashed #edf2f7' }}>
+              {v.pagos && v.pagos.length > 0 ? (
+                v.pagos.map((p, idx) => (
+                  <span key={idx} style={{ 
+                    color: '#1e293b', 
+                    fontSize: '12px', 
+                    fontWeight: 'bold', 
+                    backgroundColor: '#edf2f7', 
+                    padding: '4px 8px', 
+                    borderRadius: '4px'
+                  }}>
+                    💳 {p.medioPago?.nombre || 'Desconocido'}: ${p.monto.toFixed(2)}
+                  </span>
+                ))
+              ) : (
+                <span style={{ color: '#777', fontSize: '12px', fontStyle: 'italic' }}>Sin especificar</span>
+              )}
             </div>
 
             {v.detalles.map(d => (
