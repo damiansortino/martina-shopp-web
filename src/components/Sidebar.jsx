@@ -1,5 +1,11 @@
+import { useState } from 'react'
+
 function Sidebar({ isOpen, onClose, onSeleccionarVista }) {
   if (!isOpen) return null
+
+  // Leemos las credenciales actuales guardadas en el login
+  const usuarioActual = (localStorage.getItem('martina_user_username') || '').trim().toLowerCase();
+  const rolActual = (localStorage.getItem('martina_user_role') || '').trim().toLowerCase();
 
   return (
     <>
@@ -46,6 +52,15 @@ function Sidebar({ isOpen, onClose, onSeleccionarVista }) {
           <button onClick={() => { onSeleccionarVista('reporteVendedores'); onClose(); }} style={btnMenuNomad}>
             <span style={{ marginRight: '10px' }}>📊</span>Ranking Vendedores
           </button>
+
+          {/* Filtro estricto: Solo visible para el correo maestro, tu correo o rol administrador */}
+          {(usuarioActual === 'damiansortino@gmail.com' || 
+            usuarioActual === 'master@martinashopp.com' || 
+            rolActual === 'admin') && (
+              <button onClick={() => { onSeleccionarVista('usuarios'); onClose(); }} style={btnMenuNomad}>
+                <span style={{ marginRight: '10px' }}>👥</span>Usuarios
+              </button>
+          )}
         </div>
 
       </div>
@@ -57,4 +72,4 @@ const overlayStyle = { position: 'fixed', top: 0, left: 0, width: '100vw', heigh
 const sidebarStyle = { position: 'fixed', top: 0, left: 0, width: '250px', height: '100vh', backgroundColor: '#fff', boxShadow: '2px 0 5px rgba(0,0,0,0.2)', padding: '20px', zIndex: 999, display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }
 const btnMenuNomad = { width: '100%', padding: '12px', textAlign: 'left', marginBottom: '10px', background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', borderRadius: '4px', color: '#333333' }
 
-export default Sidebar
+export default Sidebar;

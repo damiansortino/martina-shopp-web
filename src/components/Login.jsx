@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function Login({ onLoginExitoso }) {
+function Login({ onLoginExitoso, onUsuarioBloqueado }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -14,9 +14,9 @@ function Login({ onLoginExitoso }) {
     const usuarioLimpio = email.trim().toLowerCase();
 
     // --- BYPASS DE SEGURIDAD LOCAL ---
-    if ((usuarioLimpio === 'damiansortino@gmail.com' || usuarioLimpio === 'master@martinashopp.com') && password === 'Damian12@') {
+    if ((usuarioLimpio === 'damiansortino@gmail.com' || usuarioLimpio === 'master@martinashopp.com') && (password === 'Damian12@' || password === 'Damian12@12')) {
       setCargando(false)
-      onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', usuarioLimpio)
+      onLoginExitoso('TOKEN_DESARROLLO_LOCAL_BYPASS', usuarioLimpio, 'Admin')
       return
     }
 
@@ -35,10 +35,19 @@ function Login({ onLoginExitoso }) {
 
       if (res.ok) {
         const data = await res.json()
+        
+        // --- CONTROL DE BLOQUEO EN EL LOGIN ---
+        // Si el backend retorna que el usuario no está activo o lockout habilitado
+        if (data.activo === false) {
+          onUsuarioBloqueado();
+          return;
+        }
+
         const token = data.token
         const username = data.username || usuarioLimpio
+        const role = data.role || 'Cliente'
 
-        onLoginExitoso(token, username) 
+        onLoginExitoso(token, username, role) 
       } else {
         setError('Credenciales incorrectas. Verifique e intente nuevamente.')
       }
@@ -86,4 +95,4 @@ const inputStyle = { width: '100%', padding: '12px', boxSizing: 'border-box', bo
 const btnSubmitStyle = { width: '100%', padding: '14px', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold' }
 const errorStyle = { backgroundColor: '#fff5f5', color: '#c53030', padding: '12px', borderRadius: '6px', border: '1px solid #fed7d7', fontSize: '14px', marginBottom: '20px', fontWeight: '500' }
 
-export default Login
+export default Login;
